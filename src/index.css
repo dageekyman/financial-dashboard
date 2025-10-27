@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles to force number input arrows (spin buttons) to always be visible */
+
+/* For Chrome, Safari, Edge, and Opera */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button {
+    /* Set appearance to a valid state that allows arrows to be drawn */
+    -webkit-appearance: textfield; 
+    /* Forces permanent visibility by overriding the browser's default hover rule */
+    opacity: 1 !important; 
+    margin: 0;
+}
+
+/* For Firefox and other browsers */
+input[type=number] {
+    /* Ensures the field behaves like a text field, a standard fix for this in Firefox */
+    -moz-appearance: textfield; 
+    /* Sets the appearance explicitly for consistency */
+    appearance: textfield;
+    /* Adds internal padding on the right to ensure space for the arrows */
+    padding-right: 1.5rem; 
+}

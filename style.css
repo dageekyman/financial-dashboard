@@ -1,0 +1,112 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f9fafb;
+}
+.container {
+    max-width: 1800px; margin: 2rem auto;
+    background-color: #f9fafb; border-radius: 0.75rem;
+}
+
+/* Card Styling for Sections */
+.card-section {
+    background-color: #ffffff; padding: 1.5rem; border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    margin-bottom: 1.5rem; border: 1px solid #e5e7eb;
+}
+
+/* Collapsible Section Summary */
+summary.section-title {
+    font-size: 1.5rem; font-weight: 600; color: #111827;
+    padding-bottom: 0.5rem; border-bottom: 2px solid #e5e7eb; margin-bottom: 0;
+    cursor: pointer; list-style: none; position: relative; padding-left: 1.75rem;
+    transition: background-color 0.15s ease-in-out; /* Add hover transition */
+}
+summary.section-title:hover {
+    background-color: #f9fafb; /* Light hover */
+}
+summary::-webkit-details-marker, summary::marker { display: none; }
+summary.section-title::before { /* Triangle marker */
+    content: ''; display: inline-block; width: 0; height: 0;
+    border-top: 6px solid transparent; border-bottom: 6px solid transparent;
+    border-left: 8px solid #6b7280; position: absolute; left: 0.5rem; top: 50%;
+    transform: translateY(-50%) rotate(0deg); transition: transform 0.2s ease-in-out;
+}
+details[open] > summary.section-title::before { transform: translateY(-50%) rotate(90deg); }
+details > div { margin-top: 1.5rem; }
+
+/* Subsections */
+.subsection-title { font-size: 1.25rem; font-weight: 500; color: #1f2937; margin-top: 1.5rem; margin-bottom: 1rem; }
+
+/* Forms */
+.input-group { margin-bottom: 1.25rem; }
+label { display: block; margin-bottom: 0.25rem; font-weight: 500; color: #374151; font-size: 0.875rem; }
+input[type="number"], input[type="text"], select {
+    width: 100%; padding: 0.5rem 0.75rem; /* Slightly reduced padding */ border: 1px solid #d1d5db;
+    border-radius: 0.375rem; box-sizing: border-box; font-size: 0.875rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; /* Add transition */
+}
+input:focus, select:focus {
+    border-color: #4f46e5; outline: none;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+/* Buttons */
+/* Base styles for action buttons */
+.action-button {
+    padding: 0.625rem 1.25rem; border: none; border-radius: 0.375rem;
+    font-weight: 500; cursor: pointer; transition: background-color 0.15s ease-in-out, transform 0.1s ease-in-out;
+    font-size: 0.875rem; color: white; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+.action-button:hover { filter: brightness(110%); }
+.action-button:active { transform: translateY(1px); }
+
+/* Specific button colors */
+.save-button { background-color: #10b981; } /* Emerald-500 */
+.reset-button { background-color: #ef4444; } /* Red-500 */
+.load-button { background-color: #3b82f6; } /* Blue-500 */
+.save-as-button { background-color: #16a34a; } /* Green-600 */
+.delete-button { background-color: #dc2626; } /* Red-600 */
+.calculate-button { background-color: #059669; } /* Emerald-600 */
+
+/* Add/Remove buttons inside tables */
+.add-btn { background-color: #22c55e; color: white; padding: 0.5rem 0.75rem; border:none; border-radius: 0.375rem; font-weight: 500; cursor: pointer; transition: background-color 0.15s ease-in-out; font-size: 0.75rem; }
+.add-btn:hover { background-color: #16a34a; }
+.remove-btn { background-color: #ef4444; color: white; padding: 0.375rem 0.625rem; border:none; border-radius: 0.375rem; font-weight: 500; cursor: pointer; transition: background-color 0.15s ease-in-out; font-size: 0.75rem; line-height: 1; /* Align text better */ }
+.remove-btn:hover { background-color: #dc2626; }
+
+
+/* Tables */
+table { width: 100%; margin-top: 1rem; border-collapse: collapse; table-layout: auto; }
+th, td { text-align: left; padding: 0.75rem 0.5rem; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; word-break: break-word; vertical-align: middle; }
+th { background-color: #f3f4f6; font-weight: 600; color: #1f2937; }
+
+/* Zebra Striping & Hover */
+#investmentsTable tbody tr:nth-child(even), #otherInvestmentsTable tbody tr:nth-child(even),
+#rentalPortfolioTable tbody tr:nth-child(even), #currentAssetsTable tbody tr:nth-child(even),
+#liabilitiesTableStandalone tbody tr:nth-child(even), #incomeTable tbody tr:nth-child(even),
+#expensesTable tbody tr:nth-child(even), #lifeEventsTable tbody tr:nth-child(even) { background-color: #f9fafb; }
+#investmentsTable tbody tr:hover, #otherInvestmentsTable tbody tr:hover,
+#rentalPortfolioTable tbody tr:hover, #currentAssetsTable tbody tr:hover,
+#liabilitiesTableStandalone tbody tr:hover, #incomeTable tbody tr:hover,
+#expensesTable tbody tr:hover, #lifeEventsTable tbody tr:hover { background-color: #f3f4f6; cursor: default; }
+
+
+/* --- Column Widths --- */
+/* (Condensed for brevity - Includes Life Events Table) */
+#investmentsTable th:nth-child(1){width: 8%;} /*...*/ #investmentsTable th:nth-child(10){width: 5%;}
+.other-investments-table th:nth-child(1){width: 7%;} /*...*/ .other-investments-table th:nth-child(12){width: 5%;}
+#currentAssetsTable th:nth-child(1){width: 25%;} /*...*/ #currentAssetsTable th:nth-child(4){width: 10%;}
+#liabilitiesTableStandalone th:nth-child(1){width: 25%;} /*...*/ #liabilitiesTableStandalone th:nth-child(4){width: 10%;}
+#rentalPortfolioTable th, #rentalPortfolioTable td { padding: 0.5rem 0.2rem; font-size: 0.8rem; } /* Tighter */
+#rentalPortfolioTable th:nth-child(1){width: 10%;} /* Address */ #rentalPortfolioTable th:nth-child(2){width: 6%;} /* Purch */ #rentalPortfolioTable th:nth-child(3){width: 6%;} /* Rehab */ #rentalPortfolioTable th:nth-child(4){width: 6%;} /* Closing */ #rentalPortfolioTable th:nth-child(5){width: 7%;} /* Loan */ #rentalPortfolioTable th:nth-child(6){width: 5%;} /* Rate */ #rentalPortfolioTable th:nth-child(7){width: 5%;} /* Term */ #rentalPortfolioTable th:nth-child(8){width: 6%;} /* Pymts */ #rentalPortfolioTable th:nth-child(9){width: 7%;} /* Value */ #rentalPortfolioTable th:nth-child(10){width: 5%;} /* Rent */ #rentalPortfolioTable th:nth-child(11){width: 5%;} /* OpEx */ #rentalPortfolioTable th:nth-child(12){width: 5%;} /* P&I */ #rentalPortfolioTable th:nth-child(13){width: 6%;} /* CF */ #rentalPortfolioTable th:nth-child(14){width: 7%;} /* Loan Bal */ #rentalPortfolioTable th:nth-child(15){width: 7%;} /* Equity */ #rentalPortfolioTable th:nth-child(16){width: 7%;} /* Profit */ #rentalPortfolioTable th:nth-child(17){width: 3%;} /* Action */
+/* Life Events Table Widths */
+.life-events-table th:nth-child(1), .life-events-table td:nth-child(1) { width: 10%; } /* Year */
+.life-events-table th:nth-child(2), .life-events-table td:nth-child(2) { width: 15%; } /* Type */
+.life-events-table th:nth-child(3), .life-events-table td:nth-child(3) { width: 25%; } /* Description */
+.life-events-table th:nth-child(4), .life-events-table td:nth-child(4) { width: 15%; } /* Amount */
+.life-events-table th:nth-child(5), .life-events-table td:nth-child(5) { width: 15%; } /* Frequency */
+.life-events-table th:nth-child(6), .life-events-table td:nth-child(6) { width: 15%; } /* Notes */
+.life-events-table th:nth-child(7), .life-events-table td:nth-child(7) { width: 5%; }  /* Action */
+
+/* --- Other Styles --- (Condensed for brevity - Unchanged) */
+#person1SSBenefitsTable th,#person1SSBenefitsTable td,#person2SSBenefitsTable th,#person2SSBenefitsTable td{padding:.5rem;text-align:center}#incomeTimelineTable th,#incomeTimelineTable td{padding:.5rem .25rem;text-align:right;border-bottom:1px solid #e5e7eb}#incomeTimelineTable th{text-align:center;background-color:#f3f4f6}#incomeTimelineTable td:nth-child(1),#incomeTimelineTable td:nth-child(2){text-align:center}#incomeTable th,#incomeTable td,#expensesTable th,#expensesTable td{padding:.5rem}.total-row td{font-weight:700;font-size:1rem;color:#111827}.grand-total-row td{font-weight:700;font-size:1.125rem;color:#1e3a8a;background-color:#e0e7ff}.subtotal-row td{font-weight:500;font-size:.9rem;color:#374151;background-color:#f9fafb}.results-card{background-color:#eef2ff;padding:1.5rem;border-radius:.5rem;margin-top:2rem;border:1px solid #c7d2fe}.results-card h3{color:#373182;margin-bottom:1rem;font-size:1.25rem}.results-card h4{color:#373182;margin-bottom:.75rem;font-size:1.1rem}.results-card p{color:#374151;margin-bottom:.5rem;font-size:1rem}.results-card .highlight{font-weight:700;color:#373182}.tooltip{position:relative;display:inline-block;cursor:help}.tooltip .tooltiptext{visibility:hidden;width:220px;background-color:#555;color:#fff;text-align:center;border-radius:6px;padding:5px 0;position:absolute;z-index:1;bottom:125%;left:50%;margin-left:-110px;opacity:0;transition:opacity .3s;font-size:.875rem;font-weight:400}.tooltip .tooltiptext::after{content:"";position:absolute;top:100%;left:50%;margin-left:-5px;border-width:5px;border-style:solid;border-color:#555 transparent transparent transparent}.tooltip:hover .tooltiptext{visibility:visible;opacity:1}.hidden{display:none}
