@@ -203,7 +203,7 @@ const SocialRealEstateSection = () => {
                     {/* FRA INPUTS (No table formatting needed here) */}
                     <div className="grid md:grid-cols-2 gap-x-8 gap-y-4 mb-6 p-4 border border-gray-200 rounded-md bg-gray-50"> 
                         <div className="input-group"> 
-                            {/* FIX: Removed space from inside parentheses, added non-breaking space after */}
+                            {/* FIX: Added space after ($) */}
                             <label htmlFor="person1FRABenefit">Person 1's Estimated FRA Monthly Benefit ($)&nbsp;</label> 
                             <input 
                                 type="number" 
@@ -215,8 +215,8 @@ const SocialRealEstateSection = () => {
                             /> 
                         </div> 
                         <div className="input-group"> 
-                            {/* FIX: Removed space from inside parentheses, added non-breaking space after */}
-                            <label htmlFor="person2FRABenefit">Person 2's Estimated FRA Monthly Benefit ($)&nbsp;(If applicable)&nbsp;</label> 
+                            {/* FIX: Added space after ($) */}
+                            <label htmlFor="person2FRABenefit">Person 2's Estimated FRA Monthly Benefit ($)&nbsp;(If applicable)</label> 
                             <input 
                                 type="number" 
                                 id="person2FRABenefit" 
