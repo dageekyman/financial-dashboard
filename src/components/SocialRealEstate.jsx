@@ -115,13 +115,14 @@ const SocialRealEstateSection = () => {
     const ssData = appData.socialSecurity;
     const rentalsData = calculationResults.rentalsWithCalculations || appData.rentals;
 
+    // FIX 1: Change 'purchasePrice' to 'price' to match the data structure and calculation
     const rentalTableKeys = [
-        'address', 'purchasePrice', 'rehabCosts', 'closingCosts', 'loanAmount', 'interestRate', 'loanTerm', 
+        'address', 'price', 'rehabCosts', 'closingCosts', 'loanAmount', 'interestRate', 'loanTerm', 
         'paymentsMade', 'arv', 'rent', 'userProvidedMonthlyOpEx', 'monthlyPI', 
         'netCashFlow', 'loanBalance', 'equity', 'netProfitIfSold'
     ];
     const rentalTableInputs = {
-        address: { placeholder: '123 Main St' }, purchasePrice: { placeholder: '0' }, rehabCosts: { placeholder: '0' }, 
+        address: { placeholder: '123 Main St' }, price: { placeholder: '0' }, rehabCosts: { placeholder: '0' }, // FIX 1
         closingCosts: { placeholder: '0' }, loanAmount: { placeholder: '0' }, interestRate: { placeholder: '0.0%' }, 
         loanTerm: { placeholder: '30' }, paymentsMade: { placeholder: '0' }, arv: { placeholder: '0' }, 
         rent: { placeholder: '0' }, userProvidedMonthlyOpEx: { placeholder: '0' }, monthlyPI: { placeholder: '0' }
@@ -342,7 +343,8 @@ const SocialRealEstateSection = () => {
                                 <tr>
                                     {/* FIX 1: Change Property Address/Desc. header to colSpan="2" to match the body rows */}
                                     <th className={headerCellClass} colSpan="2">Property Address/Desc.</th>
-                                    <th className={`text-right ${headerCellClass}`}>Purchase Price ($)</th>
+                                    {/* FIX 2: Updated header text to reflect 'price' key and original basis */}
+                                    <th className={`text-right ${headerCellClass}`}>Original Purchase Price ($)</th> 
                                     <th className={`text-right ${headerCellClass}`}>Rehab Cost ($)</th>
                                     <th className={`text-right ${headerCellClass}`}>Closing Costs ($)</th>
                                     <th className={`text-right ${headerCellClass}`}>Loan Amt ($)</th>
@@ -373,7 +375,7 @@ const SocialRealEstateSection = () => {
                             </tbody>
                             <tfoot>
                                 <tr className="total-row bg-gray-50">
-                                    {/* FIX 2: Change colSpan to 10. The label spans Address (2 cols) + 7 inputs + Est. Value (1 col) = 10 columns total. */}
+                                    {/* FIX 2: colSpan=10 to span the 10 columns up to Monthly Rent. This aligns the totals correctly. */}
                                     <td className={`font-semibold text-left pl-4`} colSpan="10">
                                         Total Portfolio Estimated Value:
                                     </td>
@@ -403,7 +405,7 @@ const SocialRealEstateSection = () => {
                         id="addRentalPropertyRow" 
                         className={addButtonStyles}
                         onClick={() => addItem('rentals', { 
-                            address: '', purchasePrice: 0, rehabCosts: 0, closingCosts: 0, loanAmount: 0, interestRate: 0, loanTerm: 30, paymentsMade: 0, arv: 0, rent: 0, userProvidedMonthlyOpEx: 0, monthlyPI: 0,
+                            address: '', price: 0, rehabCosts: 0, closingCosts: 0, loanAmount: 0, interestRate: 0, loanTerm: 30, paymentsMade: 0, arv: 0, rent: 0, userProvidedMonthlyOpEx: 0, monthlyPI: 0, // FIX 1
                             netCashFlow: 0, loanBalance: 0, equity: 0, netProfitIfSold: 0
                         })} 
                     >
