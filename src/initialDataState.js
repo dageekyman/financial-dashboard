@@ -63,7 +63,9 @@ export const initialDataState = {
 
     // 7. Real Estate
     rentals: [
-        { id: 30, address: "123 Main St", price: 55000, rehabCosts: 5000, closingCosts: 2000, loanAmount: 0, interestRate: 0, loanTerm: 0, paymentsMade: 0, arv: 85000, rent: 900, userProvidedMonthlyOpEx: 300, monthlyPI: 0 },
+        // Property 1 (Unfinanced) - Explicitly set loan data to 0
+        { id: 30, address: "123 Main St", price: 75000, rehabCosts: 5000, closingCosts: 2000, loanAmount: 0, interestRate: 0, loanTerm: 0, paymentsMade: 0, arv: 85000, rent: 900, userProvidedMonthlyOpEx: 300, monthlyPI: 0 },
+        // Property 2 (Financed)
         { id: 31, address: "456 Oak Ave", price: 120000, rehabCosts: 10000, closingCosts: 4000, loanAmount: 80000, interestRate: 4.5, loanTerm: 30, paymentsMade: 60, arv: 175000, rent: 1400, userProvidedMonthlyOpEx: 500, monthlyPI: 450 },
     ],
 
