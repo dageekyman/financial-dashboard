@@ -2,9 +2,9 @@
 import { formatCurrency, parseCurrency } from './utils';
 
 // --- Internal SSA Factors ---
-const reductionFactors = { 62: 0.70, 63: 0.75, 64: 0.80, 65: 0.867, 66: 0.933, 67: 1.00 };
+const reductionFactors = { 62: 0.70, 63: 0.75, 64: 0.80, 65: 0.867, 66: 1.00 };
 const delayedCredits = { 68: 1.08, 69: 1.16, 70: 1.24 };
-const spousalReductionFactors = { 62: 0.325, 63: 0.35, 64: 0.375, 65: 0.417, 66: 0.458, 67: 0.50 }; // Corrected Syntax
+const spousalReductionFactors = { 62: 0.325, 63: 0.35, 64: 0.375, 65: 0.417, 66: 0.458, 67: 0.50 }; 
 
 // --- Monte Carlo Helper ---
 function gaussianRandom(mean = 0, stdDev = 1) {
@@ -77,7 +77,7 @@ function calculateSSBenefits(p1FRA, p2FRAOwn, selectedP1Age, selectedP2Age) {
                     monthlyBenefit = fraBenefit;
                  }
             } else if (lateFactors && age >= 68) {
-                monthlyBenefit = fraBenefit * (lateFactors[age] || 0);
+                monthlyBenefit = fraBenefit * (delayedCredits[age] || 0);
             }
 
             if (monthlyBenefit > 0 || age >= 62) {
@@ -139,6 +139,69 @@ function projectInvestmentTable(investments, yearsToRetirement) {
     return { results: results, totalValue: totalProjectedValue };
 }
 
+/**
+ * Calculates all derived metrics for the Real Estate Rental Portfolio.
+ */
+function calculateRentalMetrics(rentals, rentalSellingCostPercent) {
+    const calculatedRentals = [];
+    // Ensure selling cost rate is always a number
+    const sellingCostRate = parseCurrency(rentalSellingCostPercent || 0) / 100;
+    
+    rentals.forEach(rental => {
+        // --- Parse Inputs (Using const for strict local scope and defaulting to 0) ---
+        // Ensure all values used in math are properly parsed from the object
+        const arv = parseCurrency(rental.arv || 0);
+        const loanAmount = parseCurrency(rental.loanAmount || 0);
+        const interestRate = parseCurrency(rental.interestRate || 0) / 100 / 12; 
+        const loanTerm = parseCurrency(rental.loanTerm || 0) * 12; 
+        const paymentsMade = parseCurrency(rental.paymentsMade || 0);
+        const monthlyPI = parseCurrency(rental.monthlyPI || 0);
+        const rent = parseCurrency(rental.rent || 0);
+        const userProvidedMonthlyOpEx = parseCurrency(rental.userProvidedMonthlyOpEx || 0);
+        
+        const purchasePrice = parseCurrency(rental.price || 0); 
+        const rehabCosts = parseCurrency(rental.rehabCosts || 0);
+        const closingCosts = parseCurrency(rental.closingCosts || 0);
+        
+        // --- Loan Balance Calculation ---
+        let loanBalance = 0;
+        if (loanAmount > 0) {
+            loanBalance = calculateLoanBalance(loanAmount, interestRate, loanTerm, paymentsMade);
+        }
+
+        // --- Core Metrics ---
+        const netCashFlow = rent - userProvidedMonthlyOpEx - monthlyPI;
+        const equity = arv - loanBalance;
+        
+        // --- Net Profit Calculation (Basis & Proceeds) ---
+        
+        // Final attempt to fix the phantom loan contamination
+        // If loanAmount is > 0, use the loanAmount, otherwise use 0.
+        // This is the cleanest mathematical solution.
+        const basisDeduction = loanAmount > 0 ? loanAmount : 0;
+        
+        // Net Initial Cash Investment (Basis) = Price + Rehab + Closing - Basis Deduction
+        const netInitialInvestment = purchasePrice + rehabCosts + closingCosts - basisDeduction;
+
+        // Cash Received at Closing
+        const sellingCost = arv * sellingCostRate;
+        const cashReceived = arv - loanBalance - sellingCost;
+        
+        // Total Profit (Gain) = Cash Received at Closing - Net Initial Cash Investment
+        const netProfitIfSold = cashReceived - netInitialInvestment;
+        
+        calculatedRentals.push({
+            ...rental,
+            loanBalance,
+            netCashFlow,
+            equity,
+            netProfitIfSold 
+        });
+    });
+
+    return calculatedRentals;
+}
+
 
 /**
  * Monte Carlo Simulation: Returns success rate and final balances.
@@ -197,9 +260,9 @@ function runMonteCarloSimulation(
 }
 
 /**
- * NEW: Time-Series Monte Carlo Simulation. Returns array of annual balance arrays.
+ * Time-Series Monte Carlo Simulation. Returns array of annual balance arrays.
  */
-function runMonteCarloTimeLines( // FIX: Removed export keyword
+function runMonteCarloTimeLines( 
     eventMap, simulationYears, initialAnnualExpenses, initialPortfolioBalance, 
     inflationRate, postRetirementAvgReturn, postRetirementStdDev,
     totalAnnualOtherIncomeFromSSAndRent, startYear
@@ -277,9 +340,11 @@ function calculateDeterministicLongevity(
         // 1. Calculate Net Withdrawal Needed (Annual)
         let withdrawalNeeded = annualExpensesCurrentYear - totalAnnualOtherIncomeFromSSAndRent + eventCashFlow;
         let netWithdrawal = Math.max(0, withdrawalNeeded);
-        
+
+        const annualReturn = postRetirementAvgReturn; // Use deterministic average return
+            
         // 2. Apply Market Return
-        portfolioBalance *= (1 + postRetirementAvgReturn);
+        portfolioBalance *= (1 + annualReturn);
         
         // 3. Apply Withdrawal
         portfolioBalance -= netWithdrawal;
@@ -290,12 +355,10 @@ function calculateDeterministicLongevity(
         annualExpensesCurrentYear *= (1 + inflationRate);
     }
 
-    if (yearsLasting >= MAX_LONGEVITY_YEARS && portfolioBalance > 0) {
+    if (portfolioBalance > 0) {
         return `${MAX_LONGEVITY_YEARS}+`;
-    } else if (portfolioBalance <= 0 && yearsLasting > 0) {
-         return `${yearsLasting - 1}`;
     } else {
-        return `${yearsLasting}`;
+        return `${yearsLasting - 1}`;
     }
 }
 // Final Export: Include all functions exactly once
@@ -304,6 +367,7 @@ export {
     projectInvestmentTable, 
     runMonteCarloSimulation, 
     calculateDeterministicLongevity, 
-    calculateLoanBalance, // FIX: Added missing export
-    runMonteCarloTimeLines // ADDED: New function export
+    calculateLoanBalance, 
+    runMonteCarloTimeLines,
+    calculateRentalMetrics 
 };
