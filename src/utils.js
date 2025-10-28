@@ -1,15 +1,50 @@
-// src/utils.js
-// --- Helper Functions ---
-export function formatCurrency(amount) {
-    if (isNaN(amount) || amount === null) return 'N/A';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
+// utils.js
+
+/**
+ * Format a number as currency. Returns "$0" for falsy/NaN values.
+ */
+export function formatCurrency(value, options = {}) {
+  const n = Number(value);
+  const safe = isFinite(n) && !isNaN(n) ? n : 0;
+  const {
+    currency = 'USD',
+    minimumFractionDigits = 0,
+    maximumFractionDigits = 0,
+  } = options;
+
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits,
+      maximumFractionDigits,
+    }).format(safe);
+  } catch {
+    // Fallback
+    return `$${safe.toFixed(0)}`;
+  }
 }
 
-export function parseCurrency(value) {
-    const cleanStr = String(value).replace(/[^0-9.-]+/g,"");
-    if (cleanStr === "" || cleanStr === "." || cleanStr === "-" || cleanStr === "-.") {
-        return 0;
-    }
-    const num = parseFloat(cleanStr);
-    return isNaN(num) ? 0 : num;
+/**
+ * Parse currency-like strings safely.
+ * - Strips non-numeric characters except digits, minus, and period.
+ * - Returns defaultValue (0 by default) on NaN.
+ */
+export function parseCurrency(value, defaultValue = 0) {
+  if (typeof value === 'number') return isFinite(value) ? value : defaultValue;
+  if (value == null) return defaultValue;
+
+  const cleaned = String(value).replace(/[^0-9.-]+/g, '');
+  const parsed = parseFloat(cleaned);
+  return isFinite(parsed) && !isNaN(parsed) ? parsed : defaultValue;
+}
+
+/**
+ * Accepts either 7 or 0.07 and returns 0.07
+ * (Re-exported here for convenience in UI code, identical to calculations.js)
+ */
+export function normalizePercent(value) {
+  const x = typeof value === 'number' ? value : parseFloat(String(value));
+  if (!isFinite(x) || isNaN(x)) return 0;
+  return x <= 1 ? x : x / 100;
 }
