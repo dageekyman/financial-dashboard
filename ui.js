@@ -28,11 +28,55 @@ export function updateTotalLiabilities() { /* ... */ let t=0; dom.liabilitiesTab
 
 // --- Section 5: Main Investments Portfolio --- (No changes)
 export function addInvestmentRow(inv = {}) { /* ... */ const p='investment',h=inv[`${p}-holder`]||inv.holder||'P1',a=inv[`${p}-accountType`]||inv.accountType||'',f=inv[`${p}-fund`]||inv.fund||'',cv=(inv[`${p}-currentValue`]||inv.currentValue||0)+'',mc=(inv[`${p}-monthlyContribution`]||inv.monthlyContribution||0)+'',er=(inv[`${p}-expectedReturn`]||inv.expectedReturn||8)+'',sd=(inv[`${p}-stdDev`]||inv.stdDev||12)+'',ex=(inv[`${p}-expenseRatio`]||inv.expenseRatio||0.05)+'',r=dom.investmentsTableBody.insertRow(); r.innerHTML=`<td><select class="${p}-holder"><option value="Person 1" ${h==='P1'?'selected':''}>P1</option><option value="Person 2" ${h==='P2'?'selected':''}>P2</option><option value="Joint" ${h==='Joint'?'selected':''}>Joint</option></select></td><td><input type="text" class="${p}-accountType" value="${a}"></td><td><input type="text" class="${p}-fund" value="${f}"></td><td><input type="number" class="${p}-currentValue text-right" value="${cv}" step=".01"></td><td><input type="number" class="${p}-monthlyContribution text-right" value="${mc}" step=".01"></td><td><input type="number" class="${p}-expectedReturn text-right" value="${er}" step=".1"></td><td><input type="number" class="${p}-stdDev text-right" value="${sd}" step=".1"></td><td><input type="number" class="${p}-expenseRatio text-right" value="${ex}" step=".01"></td><td class="${p}-projectedValue text-right">N/A</td><td><button type="button" class="remove-btn ${p}-remove-btn text-xs">X</button></td>`; const is=r.querySelectorAll(`.${p}-holder, .${p}-accountType, .${p}-fund, .${p}-currentValue, .${p}-monthlyContribution, .${p}-expectedReturn, .${p}-stdDev, .${p}-expenseRatio`); is.forEach(i=>{const et=(i.tagName==='SELECT')?'change':'input'; i.addEventListener(et,()=>{updateInvestmentTotals(); resetProjectionDisplays(); handleInputChange();});}); r.querySelector(`.${p}-remove-btn`).addEventListener('click',()=>{r.remove();updateInvestmentTotals();resetProjectionDisplays();handleInputChange();}); } // Minified
-export function updateInvestmentTotals() { /* ... */ let ct=0, mt=0; dom.investmentsTableBody.querySelectorAll('tr').forEach(r=>{ct+=parseCurrency(r.querySelector('.investment-currentValue').value); mt+=parseCurrency(r.querySelector('.investment-monthlyContribution').value);}); dom.setElementText(dom.totalCurrentInvestments,formatCurrency(ct)); dom.setElementText(dom.totalMonthlyContributions,formatCurrency(mt)); dom.setElementText(dom.totalSec5InvestmentsForSummary,formatCurrency(ct)); updateNetWorthStatementTotals(); } // Minified
+export function updateInvestmentTotals() {
+let currentTotal = 0;
+    let monthlyTotal = 0;
+
+    // Iterate main investments rows
+    dom.investmentsTableBody.querySelectorAll('tr').forEach((row) => {
+        const currentValueInput = row.querySelector('.investment-currentValue');
+        const monthlyContributionInput = row.querySelector('.investment-monthlyContribution');
+
+        const currentValue = parseCurrency(currentValueInput?.value || '0');
+        const monthlyContribution = parseCurrency(monthlyContributionInput?.value || '0');
+
+        currentTotal += currentValue;
+        monthlyTotal += monthlyContribution;
+    });
+
+    // Set totals for Section 4 → used by Section 3
+    dom.setElementText(dom.totalSec5InvestmentsForSummary, formatCurrency(currentTotal));
+    dom.setElementText(dom.totalInvestmentMonthlyContribution, formatCurrency(monthlyTotal));
+
+    // Refresh Section 3 net worth statement
+    updateNetWorthStatementTotals();
+}); dom.setElementText(dom.totalCurrentInvestments,formatCurrency(ct)); dom.setElementText(dom.totalMonthlyContributions,formatCurrency(mt)); dom.setElementText(dom.totalSec5InvestmentsForSummary,formatCurrency(ct)); updateNetWorthStatementTotals(); } // Minified
 
 // --- Section 5: Other Investments --- (No changes)
 export function addOtherInvestmentRow(inv = {}) { /* ... */ const p='otherInvestment',h=inv[`${p}-holder`]||inv.holder||'P1',a=inv[`${p}-accountType`]||inv.accountType||'',d=inv[`${p}-description`]||inv.description||'',cv=(inv[`${p}-currentValue`]||inv.currentValue||0)+'',mc=(inv[`${p}-monthlyContribution`]||inv.monthlyContribution||0)+'',er=(inv[`${p}-expectedReturn`]||inv.expectedReturn||5)+'',sd=(inv[`${p}-stdDev`]||inv.stdDev||8)+'',ex=(inv[`${p}-expenseRatio`]||inv.expenseRatio||0)+'',t=inv[`${p}-treatment`]||inv.treatment||'Portfolio',n=inv[`${p}-notes`]||inv.notes||'',r=dom.otherInvestmentsTableBody.insertRow(); r.innerHTML=`<td><select class="${p}-holder"><option value="Person 1" ${h==='P1'?'selected':''}>P1</option><option value="Person 2" ${h==='P2'?'selected':''}>P2</option><option value="Joint" ${h==='Joint'?'selected':''}>Joint</option></select></td><td><input type="text" class="${p}-accountType" value="${a}"></td><td><input type="text" class="${p}-description" value="${d}"></td><td><input type="number" class="${p}-currentValue text-right" value="${cv}" step=".01"></td><td><input type="number" class="${p}-monthlyContribution text-right" value="${mc}" step=".01"></td><td><input type="number" class="${p}-expectedReturn text-right" value="${er}" step=".01"></td><td><input type="number" class="${p}-stdDev text-right" value="${sd}" step=".1"></td><td><input type="number" class="${p}-expenseRatio text-right" value="${ex}" step=".01"></td><td><select class="${p}-treatment"><option value="Portfolio" ${t==='Portfolio'?'selected':''}>Portfolio</option><option value="LumpSum" ${t==='LumpSum'?'selected':''}>Lump Sum</option><option value="FixedPercent" ${t==='FixedPercent'?'selected':''}>Fixed %</option><option value="FixedAmount" ${t==='FixedAmount'?'selected':''}>Fixed $</option></select></td><td class="${p}-projectedValue text-right">N/A</td><td><input type="text" class="${p}-notes" value="${n}" placeholder="%/$"></td><td><button type="button" class="remove-btn ${p}-remove-btn text-xs">X</button></td>`; const uf=updateOtherInvestmentTotals; const is=r.querySelectorAll(`.${p}-holder, .${p}-accountType, .${p}-description, .${p}-currentValue, .${p}-monthlyContribution, .${p}-expectedReturn, .${p}-stdDev, .${p}-expenseRatio, .${p}-treatment, .${p}-notes`); is.forEach(i=>{const et=(i.tagName==='SELECT')?'change':'input'; i.addEventListener(et,()=>{if(uf)uf(); resetProjectionDisplays(); handleInputChange();});}); r.querySelector(`.${p}-remove-btn`).addEventListener('click',()=>{r.remove(); if(uf)uf(); resetProjectionDisplays(); handleInputChange();}); } // Minified
-export function updateOtherInvestmentTotals() { /* ... */ let ct=0, mt=0; dom.otherInvestmentsTableBody.querySelectorAll('tr').forEach(r=>{ct+=parseCurrency(r.querySelector('.otherInvestment-currentValue').value); mt+=parseCurrency(r.querySelector('.otherInvestment-monthlyContribution').value);}); dom.setElementText(dom.totalCurrentOtherInvestments,formatCurrency(ct)); dom.setElementText(dom.totalMonthlyOtherContributions,formatCurrency(mt)); dom.setElementText(dom.totalSec5OtherInvestmentsForSummary,formatCurrency(ct)); updateNetWorthStatementTotals(); } // Minified
+export function updateOtherInvestmentTotals() {
+let currentTotal = 0;
+    let monthlyTotal = 0;
+
+    // Iterate other investments rows
+    dom.otherInvestmentsTableBody.querySelectorAll('tr').forEach((row) => {
+        const currentValueInput = row.querySelector('.otherInvestment-currentValue');
+        const monthlyContributionInput = row.querySelector('.otherInvestment-monthlyContribution');
+
+        const currentValue = parseCurrency(currentValueInput?.value || '0');
+        const monthlyContribution = parseCurrency(monthlyContributionInput?.value || '0');
+
+        currentTotal += currentValue;
+        monthlyTotal += monthlyContribution;
+    });
+
+    // Set totals for Section 4 → used by Section 3
+    dom.setElementText(dom.totalSec5OtherInvestmentsForSummary, formatCurrency(currentTotal));
+    dom.setElementText(dom.totalOtherInvestmentMonthlyContribution, formatCurrency(monthlyTotal));
+
+    // Refresh Section 3 net worth statement
+    updateNetWorthStatementTotals();
+}); dom.setElementText(dom.totalCurrentOtherInvestments,formatCurrency(ct)); dom.setElementText(dom.totalMonthlyOtherContributions,formatCurrency(mt)); dom.setElementText(dom.totalSec5OtherInvestmentsForSummary,formatCurrency(ct)); updateNetWorthStatementTotals(); } // Minified
 
 // --- Section 7: Real Estate Rental Portfolio --- (Updated for Payments Made)
 export function calculateRentalPropertyFinancials(row) { /* ... */ const mr=parseCurrency(row.querySelector('.rental-monthlyRent')?.value||0), mo=parseCurrency(row.querySelector('.rental-monthlyOpEx')?.value||0), mp=parseCurrency(row.querySelector('.rental-monthlyPI')?.value||0), cf=mr-mo-mp; dom.setElementText(row.querySelector('.rental-netCashFlow'),formatCurrency(cf)); const ev=parseCurrency(row.querySelector('.rental-estValue')?.value||0), op=parseCurrency(row.querySelector('.rental-purchasePrice')?.value||0), rc=parseCurrency(row.querySelector('.rental-rehabCost')?.value||0), cc=parseCurrency(row.querySelector('.rental-closingCosts')?.value||0), tac=op+rc+cc, scp=(parseCurrency(dom.rentalSellingCostPercentInput?.value||'6')||6)/100, sa=ev*scp, np=ev-sa-tac; dom.setElementText(row.querySelector('.rental-netProfitIfSold'),formatCurrency(np)); const la=parseCurrency(row.querySelector('.rental-loanAmount')?.value||0), air=parseCurrency(row.querySelector('.rental-interestRate')?.value||0), lt=parseInt(row.querySelector('.rental-loanTerm')?.value||0), pm=parseInt(row.querySelector('.rental-paymentsMade')?.value||0), lbc=row.querySelector('.rental-loanBalance'), ec=row.querySelector('.rental-equity'); let clb=0, eq=ev; if(la>0&&air>=0&&lt>0){const mr=air/12/100, npt=lt*12; clb=calculateLoanBalance(la,mr,npt,pm); eq=ev-clb;} dom.setElementText(lbc,formatCurrency(clb)); dom.setElementText(ec,formatCurrency(eq)); } // Minified
@@ -42,18 +86,28 @@ export function updateRentalPortfolioTotals() { /* ... */ let tv=0,tr=0,to=0,tp=
 
 // --- Update Net Worth Statement Totals --- (Calls Asset Allocation chart)
 export function updateNetWorthStatementTotals() {
-    const otherAssetsTotal = updateSubtotalOtherAssets();
-    const investmentsTotalSec5Main = parseCurrency(dom.totalSec5InvestmentsForSummary?.textContent || 0);
-    const otherInvestmentsTotalSec5Other = parseCurrency(dom.totalSec5OtherInvestmentsForSummary?.textContent || 0);
-    const rentalPortfolioTotalSec7 = parseCurrency(dom.totalSec7RentalAssetsValueForSummary?.textContent || 0);
-    const totalAssets = otherAssetsTotal + investmentsTotalSec5Main + otherInvestmentsTotalSec5Other + rentalPortfolioTotalSec7;
-    dom.setElementText(dom.totalCurrentAssetsAll, formatCurrency(totalAssets));
-    const totalLiabilities = parseCurrency(dom.totalCurrentLiabilitiesSummary?.textContent || 0);
-    const netWorth = totalAssets - totalLiabilities;
+// Gather CURRENT asset totals only
+    const otherAssetsTotal = updateSubtotalOtherAssets(); // Section 2/Other Assets subtotal (current)
+    const mainInvestmentsCurrent = parseCurrency(dom.totalSec5InvestmentsForSummary?.textContent || 0);
+    const otherInvestmentsCurrent = parseCurrency(dom.totalSec5OtherInvestmentsForSummary?.textContent || 0);
+    const rentalPortfolioCurrent = parseCurrency(dom.totalSec7RentalAssetsValueForSummary?.textContent || 0);
+
+    const totalAssetsCurrent = otherAssetsTotal
+        + mainInvestmentsCurrent
+        + otherInvestmentsCurrent
+        + rentalPortfolioCurrent;
+
+    dom.setElementText(dom.totalCurrentAssetsAll, formatCurrency(totalAssetsCurrent));
+
+    // Liabilities (current balances)
+    const totalLiabilitiesCurrent = parseCurrency(dom.totalCurrentLiabilitiesSummary?.textContent || 0);
+
+    const netWorth = totalAssetsCurrent - totalLiabilitiesCurrent;
     dom.setElementText(dom.estimatedNetWorthDisplay, formatCurrency(netWorth));
 
-    createNetWorthChart(); // Update Net Worth Breakdown
-    createAssetAllocationChart(); // <-- Call Asset Allocation Chart Update
+    // Keep charts in sync
+    createNetWorthChart();
+    createAssetAllocationChart();
 }
 
 
