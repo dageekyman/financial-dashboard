@@ -140,7 +140,7 @@ function projectInvestmentTable(investments, yearsToRetirement) {
 }
 
 /**
- * Calculates all derived metrics for the Real Estate Rental Portfolio.
+ * Calculates all derived metrics for the Real Estate Rental Portfolio!
  */
 function calculateRentalMetrics(rentals, rentalSellingCostPercent) {
     const calculatedRentals = [];
