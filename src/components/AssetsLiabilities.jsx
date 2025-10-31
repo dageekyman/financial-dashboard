@@ -148,8 +148,10 @@ const AssetsLiabilitiesSection = () => {
     const totalLiabilitiesStandalone = (appData.liabilities || []).reduce((sum, item) => sum + (item.balance || 0), 0);
     
     // Linked Totals (Calculated in App.jsx)
-    const totalSec5InvestmentsForSummary = calculationResults.totalMainPortfolioValue || 0;
-    const totalSec5OtherInvestmentsForSummary = calculationResults.totalOtherInvestmentsValue || 0;
+    // FIX: Use the new totalCurrent... properties instead of totalMainPortfolioValue/totalOtherInvestmentsValue (which are projected)
+    const totalSec5InvestmentsForSummary = calculationResults.totalCurrentMainInvestments || 0;
+    const totalSec5OtherInvestmentsForSummary = calculationResults.totalCurrentOtherInvestments || 0;
+    // End Fix
     const totalSec7RentalAssetsValueForSummary = calculationResults.totalRentalPortfolioValue || 0;
 
 

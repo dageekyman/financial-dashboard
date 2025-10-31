@@ -6,7 +6,9 @@ import { formatCurrency, parseCurrency } from '../utils';
 
 // Helper to render the Asset Allocation Chart
 const AssetAllocationChart = ({ appData, calculationResults }) => {
-    const { formatCurrency } = useAppContext();
+    // FIX: Destructure formatCurrency from useAppContext is unnecessary and potentially buggy
+    // We already imported formatCurrency from '../utils'
+    const { formatCurrency: formatCurrencyFromContext } = useAppContext(); 
     
     // Defensive data extraction for calculating totals
     const totalSec5Investments = calculationResults.totalMainPortfolioValue || 0;
@@ -43,6 +45,7 @@ const AssetAllocationChart = ({ appData, calculationResults }) => {
                                  label: (c) => {
                                      const value = c.raw;
                                      const percentage = totalAssets > 0 ? ((value / totalAssets) * 100).toFixed(1) : 0;
+                                     // FIX: Changed formatCurrency2 to formatCurrency
                                      return `${c.label}: ${formatCurrency(value)} (${percentage}%)`;
                                  }
                              }

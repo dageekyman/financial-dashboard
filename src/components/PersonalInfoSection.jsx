@@ -10,15 +10,45 @@ const PersonalInfoSection = () => {
     const p2Age = useDataFormatting('personalInfo.currentAge2', false);
     const retAge = useDataFormatting('personalInfo.retirementAge', false);
 
-    // Effect to trigger main calculation when ages change
+    // Custom hooks for Assumption fields (all are numbers/percentages)
+    // NOTE: inflationRate is handled in Investments.jsx, so we skip it here.
+    const desiredIncome = useDataFormatting('assumptions.desiredRetirementIncomeToday', false);
+    const taxRate = useDataFormatting('assumptions.assumedTaxRateNonRoth', true); // isPercentage = true for display
+    const postRetReturn = useDataFormatting('assumptions.postRetirementReturnRateInput', true); // isPercentage = true
+    const postRetStdDev = useDataFormatting('assumptions.postRetirementStdDevInput', true); // isPercentage = true
+    const withdrawalRate = useDataFormatting('assumptions.retirementWithdrawalRate', true); // isPercentage = true
+    const simYears = useDataFormatting('assumptions.simulationYearsInput', false); // Not a currency/percent
+
+    // Effect to trigger main calculation when ages or key assumptions change
     useEffect(() => {
         runAllCalculations(); 
-    }, [p1Age.value, p2Age.value, retAge.value, runAllCalculations]);
+    }, [
+        p1Age.value, 
+        p2Age.value, 
+        retAge.value, 
+        desiredIncome.value, 
+        taxRate.value, 
+        postRetReturn.value, 
+        postRetStdDev.value, // Included in dependencies
+        withdrawalRate.value, 
+        simYears.value, 
+        runAllCalculations
+    ]);
 
     // Define a common input class for visual consistency
     const standardInputStyle = "mt-1 block w-full text-lg p-2 border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500";
     // Define a bold input style for the retirement age
     const retirementInputStyle = "mt-1 block w-full text-2xl font-bold text-green-600 p-2 border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500";
+
+    // Tooltip Data
+    const tooltipData = {
+        desiredIncome: "The annual income you desire in retirement, stated in TODAY's dollars. This amount will be adjusted for inflation up to retirement.",
+        taxRate: "The assumed marginal tax rate applied to withdrawals from non-Roth investment accounts in retirement.",
+        postRetReturn: "The average expected annual return rate for your portfolio AFTER retirement.",
+        postRetStdDev: "The assumed volatility (Standard Deviation) of your portfolio returns in retirement. Used for Monte Carlo simulation.",
+        withdrawalRate: "The initial percentage of your portfolio you plan to withdraw in the first year of retirement (e.g., 4% Rule). This withdrawal amount is then adjusted for inflation each subsequent year.",
+        simYears: "The number of years the retirement simulation should run for (e.g., 30 years for a typical retirement span)."
+    };
 
 
     return (
@@ -80,10 +110,125 @@ const PersonalInfoSection = () => {
                     </div>
                 </div>
                 
-                {/* Placeholder for other assumptions/goals that might be added later */}
+                {/* --- 2. RETIREMENT GOALS AND ASSUMPTIONS (FIXED) --- */}
                 <div className="p-5 border border-gray-200 rounded-lg bg-gray-50">
                     <h3 className="text-xl font-semibold text-gray-700 mb-4">Retirement Goals and Assumptions</h3>
-                    <p className="text-sm text-gray-600 italic">Input fields for desired retirement income, tax rates, etc., belong here.</p>
+                    
+                    {/* Replaced placeholder with actual inputs */}
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        
+                        {/* Desired Retirement Income (Today's $) */}
+                        <div className="input-group">
+                            <label htmlFor="desiredRetirementIncomeToday" className="block text-sm font-medium text-gray-700">Desired Annual Income (Today's $) 
+                                <span className="tooltip text-xs text-gray-500 ml-1">(?)<span className="tooltiptext">{tooltipData.desiredIncome}</span></span>
+                            </label>
+                            <input
+                                type="number"
+                                id="desiredRetirementIncomeToday"
+                                name="desiredRetirementIncomeToday"
+                                value={desiredIncome.value}
+                                onChange={desiredIncome.handleChange}
+                                step="1000"
+                                required
+                                autoComplete="off"
+                                className={standardInputStyle}
+                            />
+                        </div>
+
+                        {/* Assumed Tax Rate Non-Roth (%) */}
+                        <div className="input-group">
+                            <label htmlFor="assumedTaxRateNonRoth" className="block text-sm font-medium text-gray-700">Assumed Tax Rate Non-Roth (%)
+                                <span className="tooltip text-xs text-gray-500 ml-1">(?)<span className="tooltiptext">{tooltipData.taxRate}</span></span>
+                            </label>
+                            <input
+                                type="number"
+                                id="assumedTaxRateNonRoth"
+                                name="assumedTaxRateNonRoth"
+                                value={taxRate.value}
+                                onChange={taxRate.handleChange}
+                                step="1"
+                                required
+                                autoComplete="off"
+                                className={standardInputStyle}
+                            />
+                        </div>
+                        
+                        {/* Post-Retirement Return Rate (%) */}
+                        <div className="input-group">
+                            <label htmlFor="postRetirementReturnRateInput" className="block text-sm font-medium text-gray-700">Post-Ret. Avg. Return (%)
+                                <span className="tooltip text-xs text-gray-500 ml-1">(?)<span className="tooltiptext">{tooltipData.postRetReturn}</span></span>
+                            </label>
+                            <input
+                                type="number"
+                                id="postRetirementReturnRateInput"
+                                name="postRetirementReturnRateInput"
+                                value={postRetReturn.value}
+                                onChange={postRetReturn.handleChange}
+                                step="0.1"
+                                required
+                                autoComplete="off"
+                                className={standardInputStyle}
+                            />
+                        </div>
+
+                        {/* Post-Retirement Standard Deviation (%) */}
+                        <div className="input-group">
+                            <label htmlFor="postRetirementStdDevInput" className="block text-sm font-medium text-gray-700">Post-Ret. Std. Dev. (%)
+                                <span className="tooltip text-xs text-gray-500 ml-1">(?)<span className="tooltiptext">{tooltipData.postRetStdDev}</span></span>
+                            </label>
+                            <input
+                                type="number"
+                                id="postRetirementStdDevInput"
+                                name="postRetirementStdDevInput"
+                                value={postRetStdDev.value}
+                                onChange={postRetStdDev.handleChange}
+                                step="0.1"
+                                required
+                                autoComplete="off"
+                                className={standardInputStyle}
+                            />
+                        </div>
+
+                        {/* Retirement Withdrawal Rate (%) */}
+                        <div className="input-group">
+                            <label htmlFor="retirementWithdrawalRate" className="block text-sm font-medium text-gray-700">Retirement Withdrawal Rate (%)
+                                <span className="tooltip text-xs text-gray-500 ml-1">(?)<span className="tooltiptext">{tooltipData.withdrawalRate}</span></span>
+                            </label>
+                            <input
+                                type="number"
+                                id="retirementWithdrawalRate"
+                                name="retirementWithdrawalRate"
+                                value={withdrawalRate.value}
+                                onChange={withdrawalRate.handleChange}
+                                step="0.1"
+                                required
+                                autoComplete="off"
+                                className={standardInputStyle}
+                            />
+                        </div>
+
+                        {/* Simulation Years */}
+                        <div className="input-group">
+                            <label htmlFor="simulationYearsInput" className="block text-sm font-medium text-gray-700">Simulation Years
+                                <span className="tooltip text-xs text-gray-500 ml-1">(?)<span className="tooltiptext">{tooltipData.simYears}</span></span>
+                            </label>
+                            <input
+                                type="number"
+                                id="simulationYearsInput"
+                                name="simulationYearsInput"
+                                value={simYears.value}
+                                onChange={simYears.handleChange}
+                                step="1"
+                                required
+                                autoComplete="off"
+                                className={standardInputStyle}
+                            />
+                        </div>
+
+                    </div>
+                    {/* The inflation rate assumption is deliberately placed in the Investments.jsx section (Section 4) 
+                        because it is most relevant to asset growth calculations. */}
+
                 </div>
 
             </div>

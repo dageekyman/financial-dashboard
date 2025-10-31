@@ -4,7 +4,7 @@ import { formatCurrency, parseCurrency } from '../utils';
 import { Doughnut, Line, Bar } from 'react-chartjs-2'; 
 import { useAppContext } from '../hooks/useAppContext'; 
 
-// --- Helper Components for Chart Rendering ---
+// --- Helper Components for Chart Rendering (KEEP NetWorthChart here for reference, but it won't be called) ---
 
 const NetWorthChart = ({ totalAssets, totalLiabilities, netWorth }) => {
     // Only render if we have meaningful data
@@ -40,7 +40,7 @@ const NetWorthChart = ({ totalAssets, totalLiabilities, netWorth }) => {
 // --- Main Results Section Component ---
 const ResultsSection = () => {
     // FIX: Get appData and calculationResults directly from Context
-    const { appData, calculationResults } = useAppContext();
+    const { appData, calculationResults, yearsToRetirement } = useAppContext();
     
     // Define reusable class for header cell borders
     const headerCellClass = "border-r border-gray-300";
@@ -53,6 +53,9 @@ const ResultsSection = () => {
         simulationYearsInput = 30, 
         postRetirementReturnRateInput = 0, 
         postRetirementStdDevInput = 0,
+        desiredRetirementIncomeToday = 0,
+        retirementWithdrawalRate = 0,
+        assumedTaxRateNonRoth = 0
     } = assumptions;
 
     // Totals for Net Worth Chart (Defensive reading of nested state)
@@ -61,7 +64,7 @@ const ResultsSection = () => {
     const totalLiabilities = (appData?.liabilities || []).reduce((sum, item) => sum + (item.balance || 0), 0);
     const netWorth = totalCurrentAssets - totalLiabilities;
     
-    const hasProjectionData = results.yearsToRetirement !== undefined && results.yearsToRetirement !== null;
+    const hasProjectionData = yearsToRetirement !== undefined && yearsToRetirement !== null;
     const successRate = parseCurrency(results.successRate); 
     const totalSimulations = 1000;
     const successfulSims = Math.round((successRate / 100) * totalSimulations);
@@ -69,6 +72,24 @@ const ResultsSection = () => {
     const oldestAge = appData?.personalInfo?.currentAge1 > appData?.personalInfo?.currentAge2 ? appData.personalInfo.currentAge1 : appData.personalInfo.currentAge2;
     const retirementAge = appData?.personalInfo?.retirementAge || 0;
     const endAge = (oldestAge < retirementAge ? retirementAge : oldestAge) + (simulationYearsInput || 0);
+
+    // --- Data needed for NEW Summary Structure ---
+    const totalWithdrawalPool = results.totalWithdrawalPool || 0;
+    const estimatedMonthlyInvestmentIncome = results.estimatedMonthlyInvestmentIncome || 0;
+    
+    // 🏆 FIX: Extract Rental CF and recalculate Other Fixed Monthly Income
+    const totalRentalNetCashFlow = results.totalRentalNetCashFlow || 0;
+    // Recalculate Other Fixed Monthly Income (Total Other Sources minus Rental CF)
+    const totalOtherFixedMonthlyIncome = (results.totalOtherSourcesMonthlyIncome || 0) - totalRentalNetCashFlow;
+    
+    const finalTotalMonthlyIncome = results.finalTotalMonthlyIncome || 0;
+    const finalTotalAnnualIncome = finalTotalMonthlyIncome * 12;
+
+    // Calculate Desired Annual Income at Retirement (Inflated)
+    // This requires the inflation rate from assumptions which is in Investments.jsx
+    const inflationRate = appData.assumptions.inflationRate / 100;
+    const initialAnnualExpenses = parseCurrency(desiredRetirementIncomeToday) * Math.pow(1 + inflationRate, yearsToRetirement);
+    const desiredAnnualIncomeInflated = isNaN(initialAnnualExpenses) ? 0 : initialAnnualExpenses;
     
     // --- Monte Carlo Time Series Data Setup ---
     const mcTimeLineData = results.mcTimeLineData || { labels: [], p10: [], p50: [], p90: [] };
@@ -91,12 +112,77 @@ const ResultsSection = () => {
 
     return (
         <section className="space-y-6"> 
-            {/* FIX: Applied consistent main section header style */}
+            
             <h2 className="text-3xl font-bold mb-4 text-indigo-700">6. Detailed Results</h2>
             
+            {/* --- NEW: Overall Projected Retirement Income Summary (Matching Screenshot) --- */}
+            <div className="results-summary-card p-4 border border-gray-300 rounded-lg bg-gray-50">
+                <h3 className="text-xl font-bold mb-4 text-indigo-700">Overall Projected Retirement Income Summary</h3>
+                
+                <p className="text-md mb-2">Years until retirement (based on older person): <span className="font-bold text-lg text-indigo-700">{yearsToRetirement || 'N/A'}</span></p>
+                
+                <p className="text-md mb-2">Total Projected Investment Portfolio (for withdrawals): <span className="font-bold text-lg text-indigo-700">{formatCurrency(totalWithdrawalPool)}</span></p>
+
+                <p className="text-md ml-4">Projected Monthly Income from Portfolio (after-tax): <span className="font-bold text-lg text-green-700">{formatCurrency(estimatedMonthlyInvestmentIncome)}</span></p>
+                
+                {/* 🏆 Rental CF as its own line item */}
+                <p className="text-md ml-4">Projected Monthly Income from Rental Real Estate CF: <span className="font-bold text-lg text-green-700">{formatCurrency(totalRentalNetCashFlow)}</span></p>
+                
+                {/* 🏆 Adjusted label to reflect exclusion of Rental CF */}
+                <p className="text-md ml-4 mb-1">Projected Monthly Income from Other Fixed Sources (Pensions, Annuities): <span className="font-bold text-lg text-green-700">{formatCurrency(totalOtherFixedMonthlyIncome)}</span></p>
+                
+                {/* 🏆 NEW CLARIFYING NOTE FOR SS - Made bigger/bolder, removed redundancy */}
+                <p className="text-md font-bold text-gray-700 mb-3">(Note: Social Security income starts at selected ages and is included in the final total income numbers below.)</p>
+                
+                {/* Longevity added here */}
+                <p className="text-md mt-3 font-semibold border-t pt-3">
+                    Projected Portfolio Longevity (Deterministic): <span className="font-extrabold text-xl text-indigo-700 ml-2">{results.deterministicLongevity || 'N/A'} years</span>
+                </p>
+
+                <p className="text-md mt-4 font-semibold">Final Total Projected Monthly Income: <span className="font-extrabold text-xl text-green-700 ml-2">{formatCurrency(finalTotalMonthlyIncome)}</span></p>
+                
+                <p className="text-md">Final Total Projected Annual Income: <span className="font-extrabold text-xl text-green-700 ml-2">{formatCurrency(finalTotalAnnualIncome)}</span></p>
+
+                {/* REMOVED REDUNDANT FINAL NOTE */}
+            </div>
+            
+            <hr className="my-3 border-indigo-300"/>
+
+            {/* --- NEW: Retirement Goal Comparison --- */}
+            <div className="retirement-goal-comparison-card p-4 border border-green-300 rounded-lg bg-green-50">
+                <h3 className="text-xl font-bold text-green-700 mb-4">Retirement Goal Comparison</h3>
+                
+                <div className="grid md:grid-cols-3 gap-4 mb-4">
+                    <div className="input-group">
+                        <label className="block text-sm font-medium text-gray-700">Desired Annual Retirement Income (in today's dollars)</label>
+                        <input type="text" readOnly value={formatCurrency(desiredRetirementIncomeToday, {minimumFractionDigits: 0})} className="read-only-input font-bold" />
+                    </div>
+                    <div className="input-group">
+                        <label className="block text-sm font-medium text-gray-700">Sustainable Withdrawal Rate from Investments (%)</label>
+                        <input type="text" readOnly value={retirementWithdrawalRate} className="read-only-input font-bold" />
+                    </div>
+                    <div className="input-group">
+                        <label className="block text-sm font-medium text-gray-700">Assumed Tax Rate on Non-Roth Withdrawals (%)</label>
+                        <input type="text" readOnly value={assumedTaxRateNonRoth} className="read-only-input font-bold" />
+                    </div>
+                </div>
+
+                <p className="text-lg font-semibold border-t pt-2">
+                    Desired annual income at retirement (adjusted for inflation): <span className="font-extrabold text-xl text-green-800">{formatCurrency(desiredAnnualIncomeInflated, {minimumFractionDigits: 0})}</span>
+                </p>
+                <div className={`mt-3 p-3 rounded-md font-bold ${finalTotalAnnualIncome >= desiredAnnualIncomeInflated ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>
+                    {finalTotalAnnualIncome >= desiredAnnualIncomeInflated 
+                        ? '✅ Congratulations! Based on all projected income sources, you appear to be on track to meet your desired retirement income goal.' 
+                        : '🛑 Warning: Projected annual income is currently less than your desired goal at retirement.'
+                    }
+                </div>
+            </div>
+
+            <hr className="my-3 border-indigo-300"/>
+
+
             {/* --- MONTE CARLO FORECAST SUMMARY CARD (USER-FRIENDLY DISPLAY) --- */}
             <div className="results-card bg-white p-6 shadow-xl rounded-xl border border-green-200">
-                {/* FIX: Updated title color to indigo-700 for uniformity */}
                 <h2 className="text-2xl font-bold text-indigo-700 mb-6">Retirement Success Forecast</h2>
                 
                 <div className="text-center mb-6">
@@ -140,7 +226,6 @@ const ResultsSection = () => {
             <hr className="my-3 border-indigo-300"/>
 
             {/* --- Monte Carlo Portfolio Value Over Time Chart --- */}
-            {/* FIX: Applied consistent prominent header style */}
             <h3 className="text-2xl font-bold text-indigo-700 mt-6">Projected Portfolio Value Over Time (P10/P50/P90)</h3>
             <p className="text-sm text-gray-600 mb-4">The simulation runs 100 paths post-retirement to show the range of possible portfolio values.</p>
             
@@ -166,31 +251,6 @@ const ResultsSection = () => {
                         }} 
                     />
                      : <p className="text-gray-500 text-center">Run projections to see the portfolio risk visualization.</p>}
-            </div>
-            <hr className="my-3 border-indigo-300"/>
-
-
-            <h4 className="text-xl font-semibold mt-6">Overall Projected Retirement Income Summary</h4>
-            <p>Years until retirement (based on older person): <span id="yearsToRetirementResult" className="highlight">{results.yearsToRetirement || 'N/A'}</span></p>
-            <p>Total Projected Investment Portfolio (Main Portfolio and 'Portfolio' type Other Investments): <span id="projectedSec3ValueDisplay" className="highlight">{formatCurrency(results.totalWithdrawalPool || 0)}</span></p>
-            <p>Projected Monthly Income from Portfolio Withdrawals (after-tax): <span id="estimatedMonthlyIncomeFromPortfolioSec3" className="highlight">{formatCurrency(results.estimatedMonthlyInvestmentIncome || 0)}</span></p>
-            <p>Projected Monthly Income from Other Sources (Fixed %, Fixed $, Rentals): <span id="projectedMonthlyOtherSourcesIncome" className="highlight">{formatCurrency(results.totalOtherSourcesMonthlyIncome || 0)}</span></p>
-
-            {/* Projection Chart (Deterministic) */}
-            {/* FIX: Applied consistent prominent header style */}
-            <h3 className="text-2xl font-bold text-indigo-700 mt-6">Deterministic Growth Path</h3>
-            {/* FIX: Reduced max width to lg:w-2/3 and added fixed height h-80 */}
-            <div className="w-full lg:w-2/3 mx-auto my-6 h-80"> 
-                 {hasProjectionData && results.projectionChartData?.labels?.length > 0 ? 
-                    <Line 
-                        data={results.projectionChartData} 
-                        options={{ 
-                            maintainAspectRatio: false, // Ensures height: 100% works inside h-80 container
-                            plugins: { title: { display: true, text: 'Projected Portfolio Growth (Deterministic)', font: { size: 16 } } }, 
-                            scales: { y: { ticks: { callback: (value) => formatCurrency(value) } } } 
-                        }} 
-                    />
-                     : <p className="text-gray-500 text-center">Enter ages and investment data, then click 'Calculate Projections' to see the chart.</p>}
             </div>
             <hr className="my-3 border-indigo-300"/>
 
@@ -251,7 +311,20 @@ const ResultsSection = () => {
                         options={{ 
                             maintainAspectRatio: false, // Ensures height: 100% works inside h-96 container
                             plugins: { title: { display: true, text: 'Projected Monthly Income Sources in Retirement', font: { size: 16 } } },
-                            scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: (value) => formatCurrency(value) } } }
+                            scales: { 
+                                // 🏆 FIX: Use P1 Age for the label on the X-axis
+                                x: { 
+                                    stacked: true,
+                                    title: { display: true, text: 'Age of Person 1' },
+                                    ticks: {
+                                        callback: (val, index) => `Age ${results.timelineData[index]?.p1Age}`
+                                    }
+                                }, 
+                                y: { 
+                                    stacked: true, 
+                                    ticks: { callback: (value) => formatCurrency(value) } 
+                                } 
+                            }
                         }} 
                     />
                     : <p className="text-gray-500 text-center">Income Timeline Chart pending calculation.</p>
@@ -259,19 +332,23 @@ const ResultsSection = () => {
             </div>
             <hr className="my-3 border-indigo-300"/>
 
-            {/* Old Longevity Display (Relocated below chart) */}
-            <div className="text-center mt-4">
-                <p className="text-sm text-gray-600">
-                    Deterministic Longevity (single straight-line path): <span id="portfolioLongevityResult" className="font-semibold text-indigo-700">{results.deterministicLongevity || 'N/A'}</span> years
-                </p>
+
+            {/* Projection Chart (Deterministic) */}
+            <h3 className="text-2xl font-bold text-indigo-700 mt-6">Deterministic Growth Path</h3>
+            {/* FIX: Reduced max width to lg:w-2/3 and added fixed height h-80 */}
+            <div className="w-full lg:w-2/3 mx-auto my-6 h-80"> 
+                 {hasProjectionData && results.projectionChartData?.labels?.length > 0 ? 
+                    <Line 
+                        data={results.projectionChartData} 
+                        options={{ 
+                            maintainAspectRatio: false, // Ensures height: 100% works inside h-80 container
+                            plugins: { title: { display: true, text: 'Projected Portfolio Growth (Deterministic)', font: { size: 16 } } }, 
+                            scales: { y: { ticks: { callback: (value) => formatCurrency(value) } } } 
+                        }} 
+                    />
+                     : <p className="text-gray-500 text-center">Enter ages and investment data, then click 'Calculate Projections' to see the chart.</p>}
             </div>
-
-
-             {/* Net Worth Chart - Rendered here for logical grouping */}
             <hr className="my-3 border-indigo-300"/>
-            <h4 className="text-lg font-semibold mt-3 mb-2">Current Net Worth Visualization:</h4>
-            <NetWorthChart totalAssets={totalCurrentAssets} totalLiabilities={totalLiabilities} netWorth={netWorth} />
-
 
         </section>
     );

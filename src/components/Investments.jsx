@@ -1,4 +1,3 @@
-// src/components/Investments.jsx
 import React, { useCallback } from 'react';
 import { formatCurrency, parseCurrency } from '../utils';
 import { useAppContext, useDataFormatting } from '../hooks/useAppContext'; 
@@ -44,200 +43,14 @@ const InvestmentRow = ({ item, type }) => {
     // Define a utility class for permanent column separation
     const gridCellClass = "border-r border-gray-300";
 
-    
-    // Render the row
+    // Render the row — ensure there are no whitespace text nodes inside <tr>
     return (
-        // Added Zebra Striping for readability
-        <tr className="odd:bg-gray-100 hover:bg-indigo-50 transition duration-150"> 
-            {/* Holder Select */}
-            <td className={gridCellClass}>
-                <select 
-                    id={`${prefix}-${item.id}-holder`}
-                    name="holder" // ACCESSIBILITY FIX
-                    // FIX: Set background to transparent to allow row hover color to show
-                    style={{backgroundColor: 'transparent'}}
-                    className={`${prefix}-holder`} 
-                    value={item.holder} 
-                    onChange={handleChange}
-                >
-                    <option value="Person 1">Person 1</option>
-                    <option value="Person 2">Person 2</option>
-                    <option value="Joint">Joint</option>
-                </select>
-            </td>
-            {/* Account Type Input */}
-            <td className={gridCellClass}>
-                <input 
-                    type="text" 
-                    id={`${prefix}-${item.id}-accountType`}
-                    name="accountType" // ACCESSIBILITY FIX
-                    // FIX: Set background to transparent
-                    style={{backgroundColor: 'transparent'}}
-                    className={`${prefix}-accountType`} 
-                    value={item.accountType} 
-                    onChange={handleChange} 
-                    placeholder="e.g., Roth IRA"
-                    autoComplete="off"
-                />
-            </td>
-            {/* Fund/Description Input */}
-            {isMain ? (
-                <td className={`${gridCellClass} w-[15%]`}> {/* FIX 1: Added relative width class for Main Portfolio */}
-                    <input 
-                        type="text" 
-                        id={`${prefix}-${item.id}-fund`}
-                        name="fund" // ACCESSIBILITY FIX
-                        // FIX: Set background to transparent
-                        style={{backgroundColor: 'transparent'}}
-                        className={`${prefix}-fund w-full`} // Ensure input fills cell
-                        value={item.fund} 
-                        onChange={handleChange} 
-                        placeholder="Fund Name/Ticker" 
-                        autoComplete="off"
-                    />
-                </td>
-            ) : (
-                <td className={`${gridCellClass} w-[15%]`}> {/* Maintained relative width class for Other Investments */}
-                    <input 
-                        type="text" 
-                        id={`${prefix}-${item.id}-description`}
-                        name="description" // ACCESSIBILITY FIX
-                        // FIX: Set background to transparent
-                        style={{backgroundColor: 'transparent'}}
-                        className={`${prefix}-description w-full`} // Ensure input fills cell
-                        value={item.description} 
-                        onChange={handleChange} 
-                        placeholder="Pension, Annuity, SRA" 
-                        autoComplete="off"
-                    />
-                </td>
-            )}
-            
-            {/* Current Value */}
-            <td className={gridCellClass}>
-                <input 
-                    type="number" 
-                    id={`${prefix}-${item.id}-currentValue`}
-                    name="currentValue" // ACCESSIBILITY FIX
-                    // FIX: Set background to transparent
-                    style={{backgroundColor: 'transparent'}}
-                    className={`${prefix}-currentValue text-right`} 
-                    value={item.currentValue} 
-                    onChange={handleChange} 
-                    step="0.01" 
-                    autoComplete="off"
-                />
-            </td>
-            {/* Monthly Contribution */}
-            <td className={gridCellClass}>
-                <input 
-                    type="number" 
-                    id={`${prefix}-${item.id}-monthlyContribution`}
-                    name="monthlyContribution" // ACCESSIBILITY FIX
-                    // FIX: Set background to transparent
-                    style={{backgroundColor: 'transparent'}}
-                    className={`${prefix}-monthlyContribution text-right`} 
-                    value={item.monthlyContribution} 
-                    onChange={handleChange} 
-                    step="0.01" 
-                    autoComplete="off"
-                />
-            </td>
-            {/* Expected Return */}
-            <td className={gridCellClass}>
-                <input 
-                    type="number" 
-                    id={`${prefix}-${item.id}-expectedReturn`}
-                    name="expectedReturn" // ACCESSIBILITY FIX
-                    // FIX: Set background to transparent
-                    style={{backgroundColor: 'transparent'}}
-                    className={`${prefix}-expectedReturn text-right`} 
-                    value={item.expectedReturn} 
-                    onChange={handleChange} 
-                    step="0.1" 
-                    autoComplete="off"
-                />
-            </td>
-            {/* Standard Deviation */}
-            <td className={gridCellClass}>
-                <input 
-                    type="number" 
-                    id={`${prefix}-${item.id}-stdDev`}
-                    name="stdDev" // ACCESSIBILITY FIX
-                    // FIX: Set background to transparent
-                    style={{backgroundColor: 'transparent'}}
-                    className={`${prefix}-stdDev text-right`} 
-                    value={item.stdDev} 
-                    onChange={handleChange} 
-                    step="0.1" 
-                    autoComplete="off"
-                />
-            </td>
-            {/* Expense Ratio */}
-            <td className={gridCellClass}>
-                <input 
-                    type="number" 
-                    id={`${prefix}-${item.id}-expenseRatio`}
-                    name="expenseRatio" // ACCESSIBILITY FIX
-                    // FIX: Set background to transparent
-                    style={{backgroundColor: 'transparent'}}
-                    className={`${prefix}-expenseRatio text-right`} 
-                    value={item.expenseRatio} 
-                    onChange={handleChange} 
-                    step="0.01" 
-                    autoComplete="off"
-                />
-            </td>
-
-            {/* Other Investment Specific Fields */}
-            {!isMain && (
-                <td className={gridCellClass}>
-                    <select 
-                        id={`${prefix}-${item.id}-treatment`}
-                        name="treatment" // ACCESSIBILITY FIX
-                        // FIX: Set background to transparent
-                        style={{backgroundColor: 'transparent'}}
-                        className={`${prefix}-treatment`} 
-                        value={item.treatment} 
-                        onChange={handleChange}
-                    >
-                        <option value="Portfolio">Portfolio</option>
-                        <option value="LumpSum">Lump Sum</option>
-                        <option value="FixedPercent">Fixed % Dist</option>
-                        <option value="FixedAmount">Fixed $ Amount</option>
-                    </select>
-                </td>
-            )}
-
-            {!isMain && (
-                <td className={gridCellClass}>
-                    <input 
-                        type="text" 
-                        id={`${prefix}-${item.id}-notes`}
-                        name="notes" // ACCESSIBILITY FIX
-                        // FIX: Set background to transparent
-                        style={{backgroundColor: 'transparent'}}
-                        className={`${prefix}-notes`} 
-                        value={item.notes} 
-                        onChange={handleChange} 
-                        placeholder="% or $" 
-                        autoComplete="off"
-                    />
-                </td>
-            )}
-            
-            {/* Projected Value @ Retirement (Read-only output) */}
-            <td className={`${prefix}-projectedValue text-right ${gridCellClass}`}>{formatCurrency(item.projectedValue || 0)}</td>
-
-            <td>
-                <button 
-                    type="button" 
-                    className="action-button delete-button text-xs px-2 py-1" 
-                    onClick={deleteItem}
-                >
-                    X
-                </button>
-            </td>
+        <tr className="odd:bg-gray-100 hover:bg-indigo-50 transition duration-150">
+{isMain ? (
+<td className={gridCellClass}><select id={`${prefix}-${item.id}-holder`} name="holder" style={{backgroundColor: 'transparent'}} className={`${prefix}-holder`} value={item.holder} onChange={handleChange}><option value="Person 1">Person 1</option><option value="Person 2">Person 2</option><option value="Joint">Joint</option></select></td>
+) : (
+<td className={gridCellClass}><select id={`${prefix}-${item.id}-holder`} name="holder" style={{backgroundColor: 'transparent'}} className={`${prefix}-holder`} value={item.holder} onChange={handleChange}><option value="Person 1">Person 1</option><option value="Person 2">Person 2</option><option value="Joint">Joint</option></select></td>
+)}<td className={gridCellClass}><input type="text" id={`${prefix}-${item.id}-accountType`} name="accountType" style={{backgroundColor: 'transparent'}} className={`${prefix}-accountType`} value={item.accountType} onChange={handleChange} placeholder="e.g., Roth IRA" autoComplete="off" /></td>{isMain ? (<td className={`${gridCellClass} w-[15%]`}><input type="text" id={`${prefix}-${item.id}-fund`} name="fund" style={{backgroundColor: 'transparent'}} className={`${prefix}-fund w-full`} value={item.fund} onChange={handleChange} placeholder="Fund Name/Ticker" autoComplete="off" /></td>) : (<td className={`${gridCellClass} w-[15%]`}><input type="text" id={`${prefix}-${item.id}-description`} name="description" style={{backgroundColor: 'transparent'}} className={`${prefix}-description w-full`} value={item.description} onChange={handleChange} placeholder="Pension, Annuity, SRA" autoComplete="off" /></td>)}<td className={gridCellClass}><input type="number" id={`${prefix}-${item.id}-currentValue`} name="currentValue" style={{backgroundColor: 'transparent'}} className={`${prefix}-currentValue text-right`} value={item.currentValue} onChange={handleChange} step="0.01" autoComplete="off" /></td><td className={gridCellClass}><input type="number" id={`${prefix}-${item.id}-monthlyContribution`} name="monthlyContribution" style={{backgroundColor: 'transparent'}} className={`${prefix}-monthlyContribution text-right`} value={item.monthlyContribution} onChange={handleChange} step="0.01" autoComplete="off" /></td><td className={gridCellClass}><input type="number" id={`${prefix}-${item.id}-expectedReturn`} name="expectedReturn" style={{backgroundColor: 'transparent'}} className={`${prefix}-expectedReturn text-right`} value={item.expectedReturn} onChange={handleChange} step="0.1" autoComplete="off" /></td><td className={gridCellClass}><input type="number" id={`${prefix}-${item.id}-stdDev`} name="stdDev" style={{backgroundColor: 'transparent'}} className={`${prefix}-stdDev text-right`} value={item.stdDev} onChange={handleChange} step="0.1" autoComplete="off" /></td><td className={gridCellClass}><input type="number" id={`${prefix}-${item.id}-expenseRatio`} name="expenseRatio" style={{backgroundColor: 'transparent'}} className={`${prefix}-expenseRatio text-right`} value={item.expenseRatio} onChange={handleChange} step="0.01" autoComplete="off" /></td>{!isMain && (<td className={gridCellClass}><select id={`${prefix}-${item.id}-treatment`} name="treatment" style={{backgroundColor: 'transparent'}} className={`${prefix}-treatment`} value={item.treatment} onChange={handleChange}><option value="Portfolio">Portfolio</option><option value="LumpSum">Lump Sum</option><option value="FixedPercent">Fixed % Dist</option><option value="FixedAmount">Fixed $ Amount</option></select></td>)}{!isMain && (<td className={gridCellClass}><input type="text" id={`${prefix}-${item.id}-notes`} name="notes" style={{backgroundColor: 'transparent'}} className={`${prefix}-notes`} value={item.notes} onChange={handleChange} placeholder="% or $" autoComplete="off" /></td>)}<td className={`${prefix}-projectedValue text-right ${gridCellClass}`}>{formatCurrency(item.projectedValue || 0)}</td><td><button type="button" className="action-button delete-button text-xs px-2 py-1" onClick={deleteItem}>X</button></td>
         </tr>
     );
 };
@@ -321,27 +134,15 @@ const InvestmentsSection = () => {
 
     return (
         <section className="card-section">
-            {/* FIX: Updated h2 to use consistent main section header style */}
             <h2 className="text-3xl font-bold mb-4 text-indigo-700">4. Investment Portfolio</h2>
             <div className="pt-4">
                 <div className="grid md:grid-cols-1 gap-6 mb-6 p-4 border border-gray-200 rounded-md bg-gray-50"> 
                     <div className="input-group"> 
                         <label htmlFor="inflationRate">Expected Avg. Annual Inflation Rate (%) <span className="tooltip text-xs text-gray-500">(?)<span className="tooltiptext">The anticipated average rate at which prices will increase (e.g., 2-3%). Used for future income goal and longevity calc.</span></span> </label> 
-                        <input 
-                            type="number" 
-                            id="inflationRate" 
-                            name="inflationRate" // FIX: Added name attribute here
-                            value={appData.assumptions.inflationRate} 
-                            onChange={handleAssumptionChange}
-                            step="0.1" 
-                            required 
-                            autoComplete="off"
-                        /> 
+                        <input type="number" id="inflationRate" name="inflationRate" value={appData.assumptions.inflationRate} onChange={handleAssumptionChange} step="0.1" required autoComplete="off" /> 
                     </div> 
                 </div>
 
-                {/* Main Investments Table */}
-                {/* FIX: Applied consistent prominent header style */}
                 <h3 className="text-2xl font-bold text-indigo-700 mb-4">Main Investment Portfolio (Used for Retirement Withdrawals)</h3> 
                 <p className="text-sm text-gray-600 -mt-2 mb-2">Assets here are projected and contribute to the income calculated via the sustainable withdrawal rate.</p> 
                 <div style={{overflowX: 'auto'}}>
@@ -361,54 +162,15 @@ const InvestmentsSection = () => {
                             </tr> 
                         </thead> 
                         <tbody>
-                            {mainInvestmentsWithResults.map(item => (
-                                <InvestmentRow
-                                    key={item.id}
-                                    item={item}
-                                    type="mainInvestments"
-                                />
-                            ))}
+                            {mainInvestmentsWithResults.map(item => (<InvestmentRow key={item.id} item={item} type="mainInvestments" />))}
                         </tbody> 
                         <tfoot> 
-                            <tr className="total-row bg-gray-50"> 
-                                {/* 1. Total Current Investments Label (Spans 3 Columns) */}
-                                {/* FIX: Removed text-right alignment here for left alignment */}
-                                <td colSpan="3" className={`font-semibold ${headerCellClass}`}>Total Current Investments (Main Portfolio):</td> 
-                                
-                                {/* 2. Total Current Investments Value (Column 4) */}
-                                <td id="totalCurrentInvestments" className={`text-right font-bold ${headerCellClass}`}>
-                                    {formatCurrency(totalCurrentInvestments)}
-                                </td> 
-                                
-                                {/* 3. Total Monthly Contributions Value (Column 5) */}
-                                <td id="totalMonthlyContributions" className={`text-right font-bold ${headerCellClass}`}>
-                                    {formatCurrency(totalMonthlyContributions)}
-                                </td> 
-                                
-                                {/* 4. EMPTY SPACER CELL (Spans Columns 6, 7, 8) */}
-                                <td colSpan="3"></td> 
-                                
-                                {/* 5. Projected Value Total (Column 9) */}
-                                <td id="totalProjectedInvestments" className="text-right font-bold">
-                                    {formatCurrency(totalProjectedInvestments)}
-                                </td> 
-                                
-                                {/* 6. Action Column (Column 10) */}
-                                <td></td> 
-                            </tr> 
+                            <tr className="total-row bg-gray-50"><td colSpan="3" className={`font-semibold ${headerCellClass}`}>Total Current Investments (Main Portfolio):</td><td id="totalCurrentInvestments" className={`text-right font-bold ${headerCellClass}`}>{formatCurrency(totalCurrentInvestments)}</td><td id="totalMonthlyContributions" className={`text-right font-bold ${headerCellClass}`}>{formatCurrency(totalMonthlyContributions)}</td><td colSpan="3"></td><td id="totalProjectedInvestments" className="text-right font-bold">{formatCurrency(totalProjectedInvestments)}</td><td></td></tr> 
                         </tfoot> 
                     </table> 
                 </div>
-                <button 
-                    id="addInvestmentRow" 
-                    className={addButtonStyles}
-                    onClick={() => addInvestmentItem('mainInvestments', { holder: 'Person 1', accountType: '', fund: '', currentValue: 0, monthlyContribution: 0, expectedReturn: 8.0, stdDev: 12.0, expenseRatio: 0.05 })}
-                >
-                    Add to Main Portfolio
-                </button>
+                <button id="addInvestmentRow" className={addButtonStyles} onClick={() => addInvestmentItem('mainInvestments', { holder: 'Person 1', accountType: '', fund: '', currentValue: 0, monthlyContribution: 0, expectedReturn: 8.0, stdDev: 12.0, expenseRatio: 0.05 })}>Add to Main Portfolio</button>
 
-                {/* Other Investments Table */}
-                {/* FIX: Applied consistent prominent header style */}
                 <h3 className="text-2xl font-bold text-indigo-700 mb-4 mt-8">Other Investments (Pensions, Annuities, Alternatives)</h3> 
                 <p className="text-sm text-gray-600 -mt-2 mb-2">Assets here are projected separately. Choose how they are treated in retirement income calculations.</p> 
                 <div style={{overflowX: 'auto'}}>
@@ -417,7 +179,7 @@ const InvestmentsSection = () => {
                             <tr> 
                                 <th className={headerCellClass}>Holder</th> 
                                 <th className={headerCellClass}>Account Type</th> 
-                                <th className={`text-left ${headerCellClass} w-[15%]`}>Description</th> 
+                                <th className={`${headerCellClass} w-[15%]`}>Description</th> 
                                 <th className={`text-right ${headerCellClass}`}>Current Value ($)</th> 
                                 <th className={`text-right ${headerCellClass}`}>Monthly Contrib. ($)</th> 
                                 <th className={`text-right ${headerCellClass}`}>Avg. Return (%) <span className="tooltip text-xs text-gray-500">(?)<span className="tooltiptext">{tooltipData.avgReturn}</span></span> </th> 
@@ -430,53 +192,14 @@ const InvestmentsSection = () => {
                             </tr> 
                         </thead> 
                         <tbody>
-                            {otherInvestmentsWithResults.map(item => (
-                                <InvestmentRow
-                                    key={item.id}
-                                    item={item}
-                                    type="otherInvestments"
-                                />
-                            ))}
+                            {otherInvestmentsWithResults.map(item => (<InvestmentRow key={item.id} item={item} type="otherInvestments" />))}
                         </tbody> 
                         <tfoot> 
-                            <tr className="total-row bg-gray-50"> 
-                                {/* 1. Total Other Investments Label (Spans 2 Columns) */}
-                                {/* FIX: Removed text-right alignment here for left alignment */}
-                                <td colSpan="2" className={`font-semibold ${headerCellClass}`}>Total Other Investments:</td> 
-                                
-                                {/* 2. Spacer for Description column */}
-                                <td colSpan="1" className={headerCellClass}></td> 
-                                
-                                {/* 3. Total Current Value */}
-                                <td id="totalCurrentOtherInvestments" className={`text-right font-bold ${headerCellClass}`}>{formatCurrency(totalCurrentOtherInvestments)}</td> 
-                                
-                                {/* 4. Total Monthly Contributions */}
-                                <td id="totalMonthlyOtherContributions" className={`text-right font-bold ${headerCellClass}`}>{formatCurrency(totalMonthlyOther)}</td> 
-                                
-                                {/* 5. Spacer cells for Avg Return, SD, Exp Ratio (3 cols) */}
-                                <td colSpan="3" className={headerCellClass}></td> 
-
-                                {/* 6. Spacer for Treatment */}
-                                <td className={headerCellClass}></td> 
-                                
-                                {/* 7. Spacer for Notes */}
-                                <td className={headerCellClass}></td> 
-                                
-                                {/* 8. Projected Value column (Final data column) */}
-                                <td id="totalProjectedOtherInvestments" className={`text-right font-bold`}>{formatCurrency(totalProjectedOtherInvestments)}</td> 
-                                
-                                <td></td> {/* Action column */}
-                            </tr> 
+                            <tr className="total-row bg-gray-50"><td colSpan="2" className={`font-semibold ${headerCellClass}`}>Total Other Investments:</td><td colSpan="1" className={headerCellClass}></td><td id="totalCurrentOtherInvestments" className={`text-right font-bold ${headerCellClass}`}>{formatCurrency(totalCurrentOtherInvestments)}</td><td id="totalMonthlyOtherContributions" className={`text-right font-bold ${headerCellClass}`}>{formatCurrency(totalMonthlyOther)}</td><td colSpan="3" className={headerCellClass}></td><td className={headerCellClass}></td><td className={headerCellClass}></td><td id="totalProjectedOtherInvestments" className={`text-right font-bold`}>{formatCurrency(totalProjectedOtherInvestments)}</td><td></td></tr> 
                         </tfoot> 
                     </table> 
                 </div>
-                <button 
-                    id="addOtherInvestmentRow" 
-                    className={addButtonStyles}
-                    onClick={() => addInvestmentItem('otherInvestments', { holder: 'Person 1', accountType: '', description: '', currentValue: 0, monthlyContribution: 0, expectedReturn: 5.0, stdDev: 8.0, expenseRatio: 0.00, treatment: 'LumpSum', notes: '' })}
-                >
-                    Add Other Investment
-                </button>
+                <button id="addOtherInvestmentRow" className={addButtonStyles} onClick={() => addInvestmentItem('otherInvestments', { holder: 'Person 1', accountType: '', description: '', currentValue: 0, monthlyContribution: 0, expectedReturn: 5.0, stdDev: 8.0, expenseRatio: 0.00, treatment: 'LumpSum', notes: '' })}>Add Other Investment</button>
             </div>
         </section>
     );
