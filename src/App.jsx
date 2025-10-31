@@ -345,6 +345,16 @@ const App = () => {
     const mainInvestmentProjection = projectInvestmentTable(appData.mainInvestments, yearsToRetirement);
     const otherInvestmentProjection = projectInvestmentTable(appData.otherInvestments, yearsToRetirement);
 
+    // FIX: Calculate current total investment values for Net Worth
+    const totalCurrentMainInvestments = appData.mainInvestments.reduce(
+        (sum, item) => sum + parseCurrency(item.currentValue || 0),
+        0
+    );
+    const totalCurrentOtherInvestments = appData.otherInvestments.reduce(
+        (sum, item) => sum + parseCurrency(item.currentValue || 0),
+        0
+    );
+    
     let totalRothPool = 0;
     let totalNonRothPool = 0;
     let totalOtherSourcesMonthlyIncome = 0;
@@ -488,16 +498,20 @@ const App = () => {
 
     const totalAssetsFromSources =
       appData.assets.reduce((sum, i) => sum + (i.value || 0), 0) +
-      mainInvestmentProjection.totalValue +
-      otherInvestmentProjection.totalValue +
+      totalCurrentMainInvestments + // Use current value
+      totalCurrentOtherInvestments + // Use current value
       totalRentalPortfolioValue;
 
     setCalculationResults({
       ...ssResults,
       mainInvestmentResults: mainInvestmentProjection.results,
       otherInvestmentResults: otherInvestmentProjection.results,
-      totalMainPortfolioValue: mainInvestmentProjection.totalValue,
-      totalOtherInvestmentsValue: otherInvestmentProjection.totalValue,
+      totalMainPortfolioValue: mainInvestmentProjection.totalValue, // Projected value
+      totalOtherInvestmentsValue: otherInvestmentProjection.totalValue, // Projected value
+      // FIX: New properties for CURRENT investment values
+      totalCurrentMainInvestments,
+      totalCurrentOtherInvestments,
+      // End Fix
       totalWithdrawalPool,
       estimatedMonthlyInvestmentIncome,
       rentalsWithCalculations: rentalResults,
