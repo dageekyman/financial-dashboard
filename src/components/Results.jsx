@@ -69,28 +69,71 @@ const ResultsSection = () => {
     const totalSimulations = 1000;
     const successfulSims = Math.round((successRate / 100) * totalSimulations);
     
-    const oldestAge = appData?.personalInfo?.currentAge1 > appData?.personalInfo?.currentAge2 ? appData.personalInfo.currentAge1 : appData.personalInfo.currentAge2;
+    const currentAge1 = appData?.personalInfo?.currentAge1 || 0;
+    const currentAge2 = appData?.personalInfo?.currentAge2 || 0;
+    const oldestAge = Math.max(currentAge1, currentAge2);
     const retirementAge = appData?.personalInfo?.retirementAge || 0;
+    const yearsUntilRetirement = results.yearsToRetirement || 0;
+
+    // End Age used for the Monte Carlo footnote
     const endAge = (oldestAge < retirementAge ? retirementAge : oldestAge) + (simulationYearsInput || 0);
 
     // --- Data needed for NEW Summary Structure ---
     const totalWithdrawalPool = results.totalWithdrawalPool || 0;
     const estimatedMonthlyInvestmentIncome = results.estimatedMonthlyInvestmentIncome || 0;
     
-    // 🏆 FIX: Extract Rental CF and recalculate Other Fixed Monthly Income
+    // Extract Rental CF and recalculate Other Fixed Monthly Income
     const totalRentalNetCashFlow = results.totalRentalNetCashFlow || 0;
-    // Recalculate Other Fixed Monthly Income (Total Other Sources minus Rental CF)
     const totalOtherFixedMonthlyIncome = (results.totalOtherSourcesMonthlyIncome || 0) - totalRentalNetCashFlow;
     
-    const finalTotalMonthlyIncome = results.finalTotalMonthlyIncome || 0;
-    const finalTotalAnnualIncome = finalTotalMonthlyIncome * 12;
+    // Total SS Monthly Income
+    const totalSSMonthlyIncome = (results.person1MonthlyBenefit || 0) + (results.person2MonthlyBenefit || 0);
+    
+    // 🏆 NEW: Final Total based ONLY on Portfolio Withdrawals
+    const finalTotalMonthlyIncomePurePortfolio = estimatedMonthlyInvestmentIncome;
+    const finalTotalAnnualIncomePurePortfolio = finalTotalMonthlyIncomePurePortfolio * 12;
+
+    // Existing Final Total (Holistic)
+    const finalTotalMonthlyIncomeHolistic = results.finalTotalMonthlyIncome || 0;
+    const finalTotalAnnualIncomeHolistic = finalTotalMonthlyIncomeHolistic * 12;
+
+    // Total Monthly Fixed Income (Rental CF + Other Fixed Sources)
+    const totalMonthlyFixedIncome = totalRentalNetCashFlow + totalOtherFixedMonthlyIncome;
+    
+    // 🏆 NEW: Total Monthly Fixed Income Streams (Includes SS)
+    const totalMonthlyFixedIncomeStreams = totalMonthlyFixedIncome + totalSSMonthlyIncome;
+    const totalAnnualFixedIncomeStreams = totalMonthlyFixedIncomeStreams * 12; // NEW Annual Fixed Income
 
     // Calculate Desired Annual Income at Retirement (Inflated)
-    // This requires the inflation rate from assumptions which is in Investments.jsx
     const inflationRate = appData.assumptions.inflationRate / 100;
-    const initialAnnualExpenses = parseCurrency(desiredRetirementIncomeToday) * Math.pow(1 + inflationRate, yearsToRetirement);
+    const desiredRetirementIncomeTodayNum = parseCurrency(desiredRetirementIncomeToday);
+    const initialAnnualExpenses = desiredRetirementIncomeTodayNum * Math.pow(1 + inflationRate, yearsUntilRetirement);
     const desiredAnnualIncomeInflated = isNaN(initialAnnualExpenses) ? 0 : initialAnnualExpenses;
+
+    // --- Longevity Age Calculation Helper ---
+    const getLongevityDisplay = (longevityResult) => {
+        let display = longevityResult || 'N/A';
+        const ageAtRetirement = Math.max(oldestAge, retirementAge);
+
+        if (typeof longevityResult === 'string' && longevityResult.endsWith('+')) {
+            return longevityResult;
+        } else {
+            const yearsLasting = parseCurrency(longevityResult, 0); // Convert years to a number
+            const agePortfolioLastsUntil = ageAtRetirement + yearsLasting;
+            
+            if (yearsLasting > 0) {
+                // FIX: Explicitly add "(P1: Age <age>)" for clarity
+                return `${yearsLasting} years (P1: Age ${agePortfolioLastsUntil})`;
+            } else if (yearsLasting === 0 && ageAtRetirement > 0) {
+                return `0 years (P1: Age ${agePortfolioLastsUntil})`;
+            }
+        }
+        return display;
+    };
     
+    const portfolioLongevityDisplay = getLongevityDisplay(results.deterministicLongevity);
+    const holisticLongevityDisplay = getLongevityDisplay(results.holisticLongevity); // NEW Holistic Longevity
+
     // --- Monte Carlo Time Series Data Setup ---
     const mcTimeLineData = results.mcTimeLineData || { labels: [], p10: [], p50: [], p90: [] };
 
@@ -115,35 +158,87 @@ const ResultsSection = () => {
             
             <h2 className="text-3xl font-bold mb-4 text-indigo-700">6. Detailed Results</h2>
             
-            {/* --- NEW: Overall Projected Retirement Income Summary (Matching Screenshot) --- */}
+            {/* --- NEW: Overall Projected Retirement Income Summary (Using a 2-column structure) --- */}
             <div className="results-summary-card p-4 border border-gray-300 rounded-lg bg-gray-50">
                 <h3 className="text-xl font-bold mb-4 text-indigo-700">Overall Projected Retirement Income Summary</h3>
                 
-                <p className="text-md mb-2">Years until retirement (based on older person): <span className="font-bold text-lg text-indigo-700">{yearsToRetirement || 'N/A'}</span></p>
-                
-                <p className="text-md mb-2">Total Projected Investment Portfolio (for withdrawals): <span className="font-bold text-lg text-indigo-700">{formatCurrency(totalWithdrawalPool)}</span></p>
+                {/* 🏆 COLOR CHANGE APPLIED: text-gray-900 */}
+                <p className="text-md mb-4">Years until retirement (based on older person): <span className="font-bold text-lg text-gray-900">{yearsToRetirement || 'N/A'}</span></p>
 
-                <p className="text-md ml-4">Projected Monthly Income from Portfolio (after-tax): <span className="font-bold text-lg text-green-700">{formatCurrency(estimatedMonthlyInvestmentIncome)}</span></p>
-                
-                {/* 🏆 Rental CF as its own line item */}
-                <p className="text-md ml-4">Projected Monthly Income from Rental Real Estate CF: <span className="font-bold text-lg text-green-700">{formatCurrency(totalRentalNetCashFlow)}</span></p>
-                
-                {/* 🏆 Adjusted label to reflect exclusion of Rental CF */}
-                <p className="text-md ml-4 mb-1">Projected Monthly Income from Other Fixed Sources (Pensions, Annuities): <span className="font-bold text-lg text-green-700">{formatCurrency(totalOtherFixedMonthlyIncome)}</span></p>
-                
-                {/* 🏆 NEW CLARIFYING NOTE FOR SS - Made bigger/bolder, removed redundancy */}
-                <p className="text-md font-bold text-gray-700 mb-3">(Note: Social Security income starts at selected ages and is included in the final total income numbers below.)</p>
-                
-                {/* Longevity added here */}
-                <p className="text-md mt-3 font-semibold border-t pt-3">
-                    Projected Portfolio Longevity (Deterministic): <span className="font-extrabold text-xl text-indigo-700 ml-2">{results.deterministicLongevity || 'N/A'} years</span>
+                <div className="grid md:grid-cols-2 gap-x-8 gap-y-4">
+                    
+                    {/* LEFT COLUMN: Pure Portfolio & Longevity Focus */}
+                    <div className='border-r border-gray-300 pr-8'>
+                        <h4 className="text-lg font-bold text-indigo-700 mb-3 border-b border-gray-400 pb-1">1. Liquid Portfolio and Sustainability Focus</h4>
+                        
+                        <p className="text-md mt-2">Total Projected Investment Portfolio (for withdrawals): <span className="font-bold text-lg text-indigo-700">{formatCurrency(totalWithdrawalPool)}</span></p>
+
+                        <div className="ml-4 space-y-1 mt-2 mb-4">
+                            {/* Portfolio Income: Stays text-indigo-700 */}
+                            <p className="text-md">Projected Monthly Income from Portfolio (after-tax): <span className="font-bold text-lg text-indigo-700">{formatCurrency(estimatedMonthlyInvestmentIncome)}</span></p>
+                        </div>
+                        
+                        {/* Total Monthly Income (Pure Portfolio Focus) */}
+                        <p className="text-md mt-4 font-semibold border-t pt-2">
+                            Final Total Monthly Income (Pure Portfolio): <span className="font-extrabold text-xl text-indigo-700 ml-2">{formatCurrency(finalTotalMonthlyIncomePurePortfolio)}</span>
+                        </p>
+                        <p className="text-md font-semibold">
+                            Final Total Annual Income (Pure Portfolio): <span className="font-extrabold text-xl text-indigo-700 ml-2">{formatCurrency(finalTotalAnnualIncomePurePortfolio)}</span>
+                        </p>
+
+                        {/* Deterministic Portfolio Longevity */}
+                        <p className="text-md mt-4 font-semibold border-t pt-2">
+                            Projected Portfolio Longevity (Deterministic): <span className="font-extrabold text-lg text-indigo-700 ml-2">{portfolioLongevityDisplay}</span>
+                        </p>
+                    </div>
+
+                    {/* RIGHT COLUMN: Holistic Income & Net Worth Security */}
+                    <div>
+                        <h4 className="text-lg font-bold text-green-700 mb-3 border-b border-gray-400 pb-1">2. Holistic Income and Net Worth Security</h4>
+                        
+                        {/* List ALL Fixed Income Sources (Including SS and the moved items) - MOVED UP */}
+                        <div className="ml-4 space-y-1 mt-2 mb-4">
+                             <p className="text-md">Projected Monthly Income from Social Security: <span className="font-bold text-lg text-green-700">{formatCurrency(totalSSMonthlyIncome)}</span></p>
+
+                             <p className="text-md">Projected Monthly Income from Rental Real Estate CF: <span className="font-bold text-lg text-green-700">{formatCurrency(totalRentalNetCashFlow)}</span></p>
+                            
+                             <p className="text-md">Projected Monthly Income from Other Fixed Sources (Pensions, Annuities): <span className="font-bold text-lg text-green-700">{formatCurrency(totalOtherFixedMonthlyIncome)}</span></p>
+                        </div>
+                        
+                        {/* Total Monthly Fixed Income Line - 🏆 FIX: Changed text size to text-xl */}
+                        <p className="text-md font-bold pt-2 border-t border-gray-300">
+                           Total Monthly Fixed Income Streams: <span className="font-extrabold text-xl text-green-700 ml-2">{formatCurrency(totalMonthlyFixedIncomeStreams)}</span>
+                        </p>
+                        
+                        {/* 🏆 NEW ANNUAL TOTAL FIXED INCOME STREAMS */}
+                        <p className="text-md font-bold">
+                           Total Annual Fixed Income Streams: <span className="font-extrabold text-xl text-green-700 ml-2">{formatCurrency(totalAnnualFixedIncomeStreams)}</span>
+                        </p>
+
+                        {/* NEW HOLISTIC LONGEVITY METRIC - Primary focus on this side */}
+                        <p className="text-md mt-4 font-semibold border-t pt-2">
+                            Projected Net Worth Longevity (Holistic): <span className="font-extrabold text-lg text-green-700 ml-2">{holisticLongevityDisplay}</span>
+                        </p>
+                        <p className="text-sm italic text-gray-600 mt-1 mb-4">
+                            (Measures years until all assets, including equity, are liquidated to cover costs.)
+                        </p>
+                        
+                    </div>
+                </div>
+
+                {/* 🏆 FIX: Centered Final Totals spanning both columns */}
+                <div className='mt-6 border-t-2 border-indigo-700 pt-4 text-center'>
+                    <h4 className="text-lg font-bold text-gray-700 mb-2">Final Total Projected Income (Holistic Check)</h4>
+                    <p className="text-md font-semibold">Final Total Projected Monthly Income: <span className="font-extrabold text-2xl text-gray-900 ml-2">{formatCurrency(finalTotalMonthlyIncomeHolistic)}</span></p>
+                    
+                    <p className="text-md font-semibold">Final Total Projected Annual Income: <span className="font-extrabold text-2xl text-gray-900 ml-2">{formatCurrency(finalTotalAnnualIncomeHolistic)}</span></p>
+                </div>
+
+
+                {/* Shared Note at the bottom */}
+                <p className="text-sm font-bold text-gray-700 mt-4 border-t pt-3">
+                    (Note: All income sources are included in the Holistic Totals. The Portfolio Focus Totals (Left Side) are limited to Portfolio Withdrawals only.)
                 </p>
-
-                <p className="text-md mt-4 font-semibold">Final Total Projected Monthly Income: <span className="font-extrabold text-xl text-green-700 ml-2">{formatCurrency(finalTotalMonthlyIncome)}</span></p>
-                
-                <p className="text-md">Final Total Projected Annual Income: <span className="font-extrabold text-xl text-green-700 ml-2">{formatCurrency(finalTotalAnnualIncome)}</span></p>
-
-                {/* REMOVED REDUNDANT FINAL NOTE */}
             </div>
             
             <hr className="my-3 border-indigo-300"/>
@@ -170,10 +265,11 @@ const ResultsSection = () => {
                 <p className="text-lg font-semibold border-t pt-2">
                     Desired annual income at retirement (adjusted for inflation): <span className="font-extrabold text-xl text-green-800">{formatCurrency(desiredAnnualIncomeInflated, {minimumFractionDigits: 0})}</span>
                 </p>
-                <div className={`mt-3 p-3 rounded-md font-bold ${finalTotalAnnualIncome >= desiredAnnualIncomeInflated ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>
-                    {finalTotalAnnualIncome >= desiredAnnualIncomeInflated 
+                {/* Check now uses the Holistic Annual Income for the pass/fail */}
+                <div className={`mt-3 p-3 rounded-md font-bold ${finalTotalAnnualIncomeHolistic >= desiredAnnualIncomeInflated ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>
+                    {finalTotalAnnualIncomeHolistic >= desiredAnnualIncomeInflated 
                         ? '✅ Congratulations! Based on all projected income sources, you appear to be on track to meet your desired retirement income goal.' 
-                        : '🛑 Warning: Projected annual income is currently less than your desired goal at retirement.'
+                        : '🛑 Warning: Projected annual income is currently less than your desired retirement income goal.'
                     }
                 </div>
             </div>
@@ -224,6 +320,7 @@ const ResultsSection = () => {
             </div>
             
             <hr className="my-3 border-indigo-300"/>
+
 
             {/* --- Monte Carlo Portfolio Value Over Time Chart --- */}
             <h3 className="text-2xl font-bold text-indigo-700 mt-6">Projected Portfolio Value Over Time (P10/P50/P90)</h3>
