@@ -358,6 +358,8 @@ const App = () => {
     let totalRothPool = 0;
     let totalNonRothPool = 0;
     let totalOtherSourcesMonthlyIncome = 0;
+    
+    let totalProjectedOtherInvestmentValue = 0; // Total projected value of ALL other investments
 
     mainInvestmentProjection.results.forEach((item) => {
       if (item.isRoth) totalRothPool += item.projectedValue;
@@ -365,6 +367,10 @@ const App = () => {
     });
 
     otherInvestmentProjection.results.forEach((item) => {
+      // 1. Accumulate ALL projected values from Other Investments
+      totalProjectedOtherInvestmentValue += item.projectedValue;
+
+      // 2. Determine how the asset contributes to the withdrawal pool or fixed income
       if (item.treatment === 'Portfolio') {
         if (item.isRoth) totalRothPool += item.projectedValue;
         else totalNonRothPool += item.projectedValue;
@@ -375,6 +381,7 @@ const App = () => {
         const amount = parseCurrency(item.notes || 0);
         totalOtherSourcesMonthlyIncome += amount;
       }
+      // LumpSum treatment contributes neither to the pool nor fixed income.
     });
 
     const totalWithdrawalPool = totalRothPool + totalNonRothPool;
@@ -418,6 +425,17 @@ const App = () => {
       (sum, r) => sum + (r.netProfitIfSold || 0),
       0
     );
+    
+    // Total other assets from section 3 (Cash, cars, etc.)
+    const totalOtherAssetsFromSection3 = appData.assets.reduce((sum, i) => sum + (i.value || 0), 0);
+
+    // Calculate the HOLISTIC NET WORTH STARTING BALANCE (All projected investments + Rental Equity + Other Assets)
+    const holisticStartingBalance = 
+        mainInvestmentProjection.totalValue + 
+        totalProjectedOtherInvestmentValue + // All projected values, regardless of treatment
+        totalRentalEquity + // Use current equity of rentals
+        totalOtherAssetsFromSection3; // Cash, car value, etc.
+
 
     totalOtherSourcesMonthlyIncome += totalRentalNetCashFlow;
 
@@ -473,6 +491,18 @@ const App = () => {
       appData.assumptions.postRetirementReturnRateInput / 100,
       todayYear + yearsToRetirement
     );
+    
+    // NEW: Calculate HOLISTIC LONGEVITY using the combined Net Worth as the starting balance
+    const holisticLongevity = calculateDeterministicLongevity(
+      lifeEventsMap,
+      totalAnnualOtherIncome,
+      initialAnnualExpenses,
+      holisticStartingBalance, // Use the significantly larger Holistic Net Worth pool
+      inflationRate,
+      appData.assumptions.postRetirementReturnRateInput / 100,
+      todayYear + yearsToRetirement
+    );
+
 
     const mcTimeLines = runMonteCarloTimeLines(
       lifeEventsMap,
@@ -498,20 +528,18 @@ const App = () => {
 
     const totalAssetsFromSources =
       appData.assets.reduce((sum, i) => sum + (i.value || 0), 0) +
-      totalCurrentMainInvestments + // Use current value
-      totalCurrentOtherInvestments + // Use current value
+      totalCurrentMainInvestments +
+      totalCurrentOtherInvestments +
       totalRentalPortfolioValue;
 
     setCalculationResults({
       ...ssResults,
       mainInvestmentResults: mainInvestmentProjection.results,
       otherInvestmentResults: otherInvestmentProjection.results,
-      totalMainPortfolioValue: mainInvestmentProjection.totalValue, // Projected value
-      totalOtherInvestmentsValue: otherInvestmentProjection.totalValue, // Projected value
-      // FIX: New properties for CURRENT investment values
+      totalMainPortfolioValue: mainInvestmentProjection.totalValue,
+      totalOtherInvestmentsValue: otherInvestmentProjection.totalValue,
       totalCurrentMainInvestments,
       totalCurrentOtherInvestments,
-      // End Fix
       totalWithdrawalPool,
       estimatedMonthlyInvestmentIncome,
       rentalsWithCalculations: rentalResults,
@@ -528,6 +556,7 @@ const App = () => {
       yearsToRetirement,
       successRate: mcSimResults.successRate,
       deterministicLongevity,
+      holisticLongevity, // NEW: Holistic Longevity result
       p10Balance,
       p50Balance,
       p90Balance,
